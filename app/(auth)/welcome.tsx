@@ -74,7 +74,7 @@ export default function WelcomeScreen() {
         </View>
 
         {/* Bottom Action Area */}
-        <View className="items-center pt-2 pb-8">
+        <View className="items-center pt-2">
           <View className="mx-auto w-full max-w-[480px]">
             <Text className="px-6 pb-6 text-center text-[28px] font-bold leading-tight tracking-tight text-[#111418] dark:text-white">
               Tu club de salud {"\n"}y beneficios
@@ -93,25 +93,26 @@ export default function WelcomeScreen() {
                 </Text>
               </Pressable>
             </View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Soporte / Ayuda"
-              onPress={() => setSupportOpen(true)}
-              className="flex-row gap-2 justify-center items-center px-4 py-2 mt-2 rounded-lg"
-            >
-              <MaterialIcons
-                name="help-outline"
-                size={18}
-                color={scheme === "dark" ? "#9ca3af" : "#617289"}
-              />
-              <Text className="text-sm font-medium leading-normal text-[#617289] underline dark:text-gray-400">
-                Soporte / Ayuda
-              </Text>
-            </Pressable>
-
-            <View className="h-4" />
           </View>
+        </View>
+
+        {/* Support at screen bottom */}
+        <View className="mt-auto items-center pb-8">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Soporte / Ayuda"
+            onPress={() => setSupportOpen(true)}
+            className="flex-row gap-2 justify-center items-center px-4 py-2 rounded-lg"
+          >
+            <MaterialIcons
+              name="help-outline"
+              size={18}
+              color={scheme === "dark" ? "#9ca3af" : "#617289"}
+            />
+            <Text className="text-sm font-medium leading-normal text-[#617289] underline dark:text-gray-400">
+              Soporte / Ayuda
+            </Text>
+          </Pressable>
         </View>
       </View>
 

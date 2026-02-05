@@ -80,12 +80,13 @@ export default function LoginPhoneScreen() {
 
     setLoading(true);
     try {
-      await sendPhoneOtp(phoneE164);
+      const response = await sendPhoneOtp(phoneE164);
       // Navigate to verify-otp screen on success
       router.push({
         pathname: "/(auth)/verify-otp",
         params: {
           phone: phoneE164,
+          userId: response.userId,
           countryCode: countryCode,
           callingCode: callingCode,
           phoneNumber: phoneDigits,
