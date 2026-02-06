@@ -15,7 +15,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const HERO_IMAGE_URI =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDzqPypHKvouCo50B9GM0oKcMqmQjUsf4owQqlC3P1KgnzgDLLLu7D2da1JdqbxLncXSOGYo1IyUVzHnEwUEFZ3zrb4w0H-HUJ_LhUNq5eQ4iS2v9hGnX1flAySVASqp_23SS3OjMsjF4cTq0mCUSqErzJAkj0iKZsNwcCkBTY2_aAvf_I6kIsPD7wQWOak3Mw8tBSdPVzWtE3oFC-PBgeQqx8AI1eGigmZfsxKgo1bHL8JftI3m-6a9mC3mVuW-7czGJ657vssHWFM';
 
-const PRIMARY_HEX = "#136dec";
+const COLORS = {
+  red: "#CC3333",
+  gray: "#666666",
+  white: "#FFFFFF",
+  bluegreen: "#0066CC",
+} as const;
 const LOGIN_ROUTE = "/(auth)/login-phone" as Href;
 
 export default function WelcomeScreen() {
@@ -32,32 +37,25 @@ export default function WelcomeScreen() {
   }, [scheme]);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#f6f7f8] dark:bg-[#101822]">
+    <SafeAreaView className="flex-1 bg-sos-white">
       <View className="flex-1">
         {/* Header: Logo */}
         <View className="justify-center items-center pt-10 pb-6">
-          <View className="flex-row gap-2 items-center">
-            <View
-              className="justify-center items-center w-12 h-12 rounded-xl"
-              style={{ backgroundColor: PRIMARY_HEX }}
-              accessibilityLabel="Logo de ClubSOS"
-              accessible
-            >
-              <MaterialIcons name="medical-services" size={28} color="#fff" />
-            </View>
-            <Text className="text-2xl font-extrabold tracking-tight text-[#111418] dark:text-white">
-              ClubSOS
-            </Text>
-          </View>
+          <Text
+            accessibilityLabel="Logo de ClubSOS"
+            className="text-3xl tracking-tight text-sos-bluegreen font-poppins-bold"
+          >
+            ClubSOS
+          </Text>
         </View>
 
         {/* Main Content: Hero */}
         <View className="px-4">
           <View className="mx-auto w-full max-w-[480px]">
-            <View className="overflow-hidden mt-2 mb-4 bg-white rounded-xl shadow-sm dark:bg-gray-800">
+            <View className="overflow-hidden mt-2 mb-4 rounded-xl shadow-sm bg-sos-white">
               <ImageBackground
                 source={{ uri: HERO_IMAGE_URI }}
-                className="h-[360px] w-full bg-white dark:bg-gray-800"
+                className="h-[360px] w-full bg-sos-white"
                 imageStyle={{ resizeMode: "cover" }}
                 accessibilityLabel="Familia feliz disfrutando un estilo de vida saludable al aire libre"
                 accessible
@@ -76,43 +74,46 @@ export default function WelcomeScreen() {
         {/* Bottom Action Area */}
         <View className="items-center pt-2">
           <View className="mx-auto w-full max-w-[480px]">
-            <Text className="px-6 pb-6 text-center text-[28px] font-bold leading-tight tracking-tight text-[#111418] dark:text-white">
+            <Text className="px-6 pb-6 text-center text-[28px] leading-tight tracking-tight text-sos-bluegreen font-poppins-bold">
               Tu club de salud {"\n"}y beneficios
             </Text>
+          </View>
+        </View>
 
-            <View className="px-4 py-3">
+        {/* Actions at screen bottom */}
+        <View className="items-center pb-6 mt-auto">
+          <View className="mx-auto w-full max-w-[480px]">
+            <View className="px-4">
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Continuar"
                 onPress={() => router.push(LOGIN_ROUTE)}
-                className="overflow-hidden justify-center items-center w-full h-14 rounded-xl"
-                style={{ backgroundColor: PRIMARY_HEX }}
+                className="overflow-hidden justify-center items-center w-full h-14 rounded-xl bg-sos-bluegreen"
               >
-                <Text className="text-lg font-bold leading-normal tracking-[0.015em] text-white">
-                  Continuar
-                </Text>
+                <View className="flex-row gap-2 items-center">
+                  <Text className="text-lg leading-normal tracking-[0.015em] text-sos-white font-poppins-bold">
+                    Continuar
+                  </Text>
+                </View>
               </Pressable>
             </View>
-          </View>
-        </View>
 
-        {/* Support at screen bottom */}
-        <View className="mt-auto items-center pb-8">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Soporte / Ayuda"
-            onPress={() => setSupportOpen(true)}
-            className="flex-row gap-2 justify-center items-center px-4 py-2 rounded-lg"
-          >
-            <MaterialIcons
-              name="help-outline"
-              size={18}
-              color={scheme === "dark" ? "#9ca3af" : "#617289"}
-            />
-            <Text className="text-sm font-medium leading-normal text-[#617289] underline dark:text-gray-400">
-              Soporte / Ayuda
-            </Text>
-          </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Soporte / Ayuda"
+              onPress={() => setSupportOpen(true)}
+              className="flex-row gap-2 justify-center items-center px-4 py-2 mt-2 rounded-lg"
+            >
+              <MaterialIcons
+                name="help-outline"
+                size={18}
+                color={COLORS.gray}
+              />
+              <Text className="text-sm leading-normal underline text-sos-gray font-poppins-medium">
+                Soporte / Ayuda
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -124,12 +125,12 @@ export default function WelcomeScreen() {
         onRequestClose={() => setSupportOpen(false)}
       >
         <View className="flex-1 justify-center items-center px-6 bg-black/50">
-          <View className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white dark:bg-[#101822]">
+          <View className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-sos-white">
             <View className="px-5 pt-5 pb-4">
-              <Text className="text-lg font-bold text-[#111418] dark:text-white">
+              <Text className="text-lg text-sos-bluegreen font-poppins-bold">
                 Soporte / Ayuda
               </Text>
-              <Text className="mt-2 text-sm leading-5 text-[#617289] dark:text-gray-300">
+              <Text className="mt-2 text-sm leading-5 text-sos-gray">
                 Si necesitas ayuda, contáctanos desde la sección de soporte o
                 revisa las preguntas frecuentes.
               </Text>
@@ -139,9 +140,9 @@ export default function WelcomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Cerrar soporte"
                 onPress={() => setSupportOpen(false)}
-                className="justify-center items-center px-4 h-11 bg-gray-100 rounded-xl dark:bg-gray-800"
+                className="justify-center items-center px-4 h-11 rounded-xl bg-sos-bluegreen"
               >
-                <Text className="text-sm font-semibold text-[#111418] dark:text-white">
+                <Text className="text-sm text-sos-white font-poppins-semibold">
                   Cerrar
                 </Text>
               </Pressable>

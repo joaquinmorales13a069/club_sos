@@ -18,7 +18,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { sendPhoneOtp } from "@/libs/appwrite";
 
-const PRIMARY_HEX = "#136dec";
+// Using colors from tailwind.config.js for inline styles (e.g., icons)
+const SOS_BLUEGREEN = "#0066CC";
+const SOS_GRAY = "#666666";
 
 export default function LoginPhoneScreen() {
   const router = useRouter();
@@ -102,7 +104,7 @@ export default function LoginPhoneScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#f6f7f8] dark:bg-[#101822]">
+    <SafeAreaView className="flex-1 bg-sos-white dark:bg-[#101822]">
       {/* Top App Bar */}
       <View className="flex-row items-center justify-between px-4 py-4">
         <Pressable
@@ -114,7 +116,7 @@ export default function LoginPhoneScreen() {
           <MaterialIcons
             name="arrow-back"
             size={24}
-            color={scheme === "dark" ? "#ffffff" : "#0f172a"}
+            color={scheme === "dark" ? "#ffffff" : SOS_GRAY}
           />
         </Pressable>
       </View>
@@ -123,10 +125,10 @@ export default function LoginPhoneScreen() {
       <View className="flex-1 px-4 w-full max-w-md mx-auto">
         {/* Headline */}
         <View className="pt-2 pb-6">
-          <Text className="text-[32px] font-bold leading-tight tracking-tight text-slate-900 dark:text-white text-left">
+          <Text className="text-[32px] font-poppins-bold leading-tight tracking-tight text-gray-900 dark:text-sos-white text-left">
             Inicia sesión
           </Text>
-          <Text className="text-base mt-2 text-slate-500 dark:text-slate-400">
+          <Text className="text-base font-sans mt-2 text-sos-gray dark:text-gray-400">
             Ingresa tu número de celular para continuar
           </Text>
         </View>
@@ -135,7 +137,7 @@ export default function LoginPhoneScreen() {
         <View className="flex flex-col gap-4 py-2">
           {/* Label */}
           <View className="flex flex-col gap-2">
-            <Text className="text-base font-medium leading-normal text-slate-900 dark:text-white">
+            <Text className="text-base font-poppins-medium leading-normal text-gray-900 dark:text-sos-white">
               Teléfono
             </Text>
 
@@ -143,16 +145,16 @@ export default function LoginPhoneScreen() {
             <View
               className={`flex-row items-center h-14 rounded-xl border overflow-hidden shadow-sm ${
                 phoneValidation.error
-                  ? "border-red-500"
-                  : "border-[#dbe0e6] dark:border-slate-700"
-              } bg-white dark:bg-slate-800`}
+                  ? "border-sos-red"
+                  : "border-gray-300 dark:border-gray-600"
+              } bg-sos-white dark:bg-gray-800`}
             >
               {/* Country Code Prefix - Pressable area */}
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Seleccionar país. Actual: +${callingCode}`}
                 onPress={() => setPickerVisible(true)}
-                className="flex-row items-center justify-center h-full pl-4 pr-3 border-r border-[#dbe0e6] dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 active:bg-slate-100 dark:active:bg-slate-800"
+                className="flex-row items-center justify-center h-full pl-4 pr-3 border-r border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 active:bg-gray-100 dark:active:bg-gray-800"
               >
                 <CountryPicker
                   countryCode={countryCode}
@@ -167,31 +169,31 @@ export default function LoginPhoneScreen() {
                   theme={{
                     backgroundColor: scheme === "dark" ? "#101822" : "#ffffff",
                     onBackgroundTextColor:
-                      scheme === "dark" ? "#ffffff" : "#0f172a",
-                    primaryColor: PRIMARY_HEX,
-                    primaryColorVariant: "#1e40af",
+                      scheme === "dark" ? "#ffffff" : "#1f2937",
+                    primaryColor: SOS_BLUEGREEN,
+                    primaryColorVariant: "#004d99",
                     filterPlaceholderTextColor:
-                      scheme === "dark" ? "#9ca3af" : "#64748b",
+                      scheme === "dark" ? "#9ca3af" : SOS_GRAY,
                     activeOpacity: 0.7,
                     fontSize: 16,
                   }}
                 />
-                <Text className="text-base font-medium text-slate-900 dark:text-white">
+                <Text className="text-base font-poppins-medium text-gray-900 dark:text-sos-white">
                   +{callingCode}
                 </Text>
                 <MaterialIcons
                   name="keyboard-arrow-down"
                   size={20}
-                  color={scheme === "dark" ? "#9ca3af" : "#64748b"}
+                  color={scheme === "dark" ? "#9ca3af" : SOS_GRAY}
                   style={{ marginLeft: 2 }}
                 />
               </Pressable>
 
               {/* Phone Number Input */}
               <TextInput
-                className="flex-1 h-full px-3 text-base font-normal text-slate-900 dark:text-white bg-transparent"
+                className="flex-1 h-full px-3 text-base font-sans text-gray-900 dark:text-sos-white bg-transparent"
                 placeholder="8888 8888"
-                placeholderTextColor={scheme === "dark" ? "#64748b" : "#94a3b8"}
+                placeholderTextColor={scheme === "dark" ? "#6b7280" : "#9ca3af"}
                 keyboardType="phone-pad"
                 value={phoneNumber}
                 onChangeText={handlePhoneChange}
@@ -203,14 +205,14 @@ export default function LoginPhoneScreen() {
 
             {/* Error Message */}
             {phoneValidation.error && (
-              <Text className="text-sm text-red-500 dark:text-red-400">
+              <Text className="text-sm font-sans text-sos-red">
                 {phoneValidation.error}
               </Text>
             )}
           </View>
 
           {/* Helper Text */}
-          <Text className="text-sm font-normal leading-normal text-slate-500 dark:text-slate-400">
+          <Text className="text-sm font-sans leading-normal text-sos-gray dark:text-gray-400">
             Te enviaremos un SMS con un código de verificación.
           </Text>
         </View>
@@ -226,12 +228,11 @@ export default function LoginPhoneScreen() {
             accessibilityState={{ disabled: isButtonDisabled }}
             disabled={isButtonDisabled}
             onPress={handleSendCode}
-            className={`w-full flex items-center justify-center rounded-xl h-12 px-5 ${
+            className={`w-full flex items-center justify-center rounded-xl h-12 px-5 bg-sos-bluegreen ${
               isButtonDisabled ? "opacity-50" : ""
             }`}
-            style={{ backgroundColor: PRIMARY_HEX }}
           >
-            <Text className="text-base font-bold leading-normal tracking-[0.015em] text-white">
+            <Text className="text-base font-poppins-bold leading-normal tracking-[0.015em] text-sos-white">
               {loading ? "Enviando..." : "Enviar código"}
             </Text>
           </Pressable>
@@ -244,10 +245,7 @@ export default function LoginPhoneScreen() {
               onPress={() => setSupportOpen(true)}
               className="py-2 px-4"
             >
-              <Text
-                className="text-sm font-medium"
-                style={{ color: PRIMARY_HEX }}
-              >
+              <Text className="text-sm font-poppins-medium text-sos-bluegreen">
                 ¿Necesitas ayuda?
               </Text>
             </Pressable>
@@ -263,12 +261,12 @@ export default function LoginPhoneScreen() {
         onRequestClose={() => setSupportOpen(false)}
       >
         <View className="flex-1 justify-center items-center px-6 bg-black/50">
-          <View className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white dark:bg-[#101822]">
+          <View className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-sos-white dark:bg-[#101822]">
             <View className="px-5 pt-5 pb-4">
-              <Text className="text-lg font-bold text-slate-900 dark:text-white">
+              <Text className="text-lg font-poppins-bold text-gray-900 dark:text-sos-white">
                 ¿Necesitas ayuda?
               </Text>
-              <Text className="mt-2 text-sm leading-5 text-slate-500 dark:text-slate-300">
+              <Text className="mt-2 text-sm font-sans leading-5 text-sos-gray dark:text-gray-300">
                 Si tienes problemas para iniciar sesión, verifica que tu número
                 de teléfono esté correcto y que tengas señal para recibir SMS.
                 {"\n\n"}
@@ -283,7 +281,7 @@ export default function LoginPhoneScreen() {
                 onPress={() => setSupportOpen(false)}
                 className="justify-center items-center px-4 h-11 bg-gray-100 rounded-xl dark:bg-gray-800"
               >
-                <Text className="text-sm font-semibold text-slate-900 dark:text-white">
+                <Text className="text-sm font-poppins-semibold text-gray-900 dark:text-sos-white">
                   Cerrar
                 </Text>
               </Pressable>

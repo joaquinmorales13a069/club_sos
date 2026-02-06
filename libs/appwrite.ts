@@ -4,6 +4,9 @@ export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
     platform: "com.sosmedical.clubsos",
     projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID,
+    databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID,
+    miembrosId: process.env.EXPO_PUBLIC_APPWRITE_MIEMBROS_ID,
+    empresasId: process.env.EXPO_PUBLIC_APPWRITE_EMPRESAS_ID,
 };
 
 export const client = new Client();

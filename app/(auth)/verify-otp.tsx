@@ -14,7 +14,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { sendPhoneOtp, verifyPhoneOtp } from "@/libs/appwrite";
 
-const PRIMARY_HEX = "#136dec";
+// SOS Brand Colors (from tailwind.config.js)
+const SOS_BLUEGREEN = "#0066CC";
+const SOS_GRAY = "#666666";
+
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -40,7 +43,7 @@ export default function VerifyOtpScreen() {
   // OTP input state
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const inputRefs = useRef<Array<TextInput | null>>([]);
+  const inputRefs = useRef<(TextInput | null)[]>([]);
 
   // Loading & error states
   const [loading, setLoading] = useState(false);
@@ -254,7 +257,7 @@ export default function VerifyOtpScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-[#101822]">
+    <SafeAreaView className="flex-1 bg-sos-white dark:bg-[#101822]">
       {/* Top App Bar */}
       <View className="flex-row items-center justify-between px-4 py-4">
         <Pressable
@@ -275,14 +278,14 @@ export default function VerifyOtpScreen() {
       {/* Main Content */}
       <View className="flex-1 px-6 pt-4 pb-8">
         {/* Headline */}
-        <Text className="text-3xl font-bold leading-tight tracking-tight text-center mb-3 text-slate-900 dark:text-white">
+        <Text className="text-3xl font-poppins-bold leading-tight tracking-tight text-center mb-3 text-slate-900 dark:text-sos-white">
           Verifica tu número
         </Text>
 
         {/* Body Text */}
-        <Text className="text-base font-normal leading-relaxed text-center px-2 mb-10 text-slate-500 dark:text-slate-400">
+        <Text className="text-base font-sans leading-relaxed text-center px-2 mb-10 text-sos-gray dark:text-slate-400">
           Ingresa el código de 6 dígitos que enviamos a tu celular{" "}
-          <Text className="font-semibold text-slate-800 dark:text-slate-200">
+          <Text className="font-poppins-semibold text-slate-800 dark:text-slate-200">
             {formatPhoneForDisplay()}
           </Text>
         </Text>
@@ -293,7 +296,7 @@ export default function VerifyOtpScreen() {
             {otpDigits.map((digit, index) => {
               const isFocused = focusedIndex === index;
               const hasValue = digit !== "";
-              const borderColor = isFocused || hasValue ? PRIMARY_HEX : (scheme === "dark" ? "#334155" : "#e2e8f0");
+              const borderColor = isFocused || hasValue ? SOS_BLUEGREEN : (scheme === "dark" ? "#334155" : "#e2e8f0");
 
               return (
                 <TextInput
@@ -310,13 +313,13 @@ export default function VerifyOtpScreen() {
                   selectTextOnFocus
                   accessibilityLabel={`Dígito ${index + 1}`}
                   accessibilityHint={`Ingresa el dígito ${index + 1} del código de verificación`}
-                  className="h-14 w-11 text-center text-2xl font-bold text-slate-900 dark:text-white bg-transparent"
+                  className="h-14 w-11 text-center text-2xl font-poppins-bold text-slate-900 dark:text-sos-white bg-transparent"
                   style={{
                     borderBottomWidth: 2,
                     borderBottomColor: borderColor,
                   }}
-                  selectionColor={PRIMARY_HEX}
-                  cursorColor={PRIMARY_HEX}
+                  selectionColor={SOS_BLUEGREEN}
+                  cursorColor={SOS_BLUEGREEN}
                 />
               );
             })}
@@ -345,8 +348,8 @@ export default function VerifyOtpScreen() {
               isVerifyDisabled ? "opacity-50" : ""
             }`}
             style={{
-              backgroundColor: PRIMARY_HEX,
-              shadowColor: "#3b82f6",
+              backgroundColor: SOS_BLUEGREEN,
+              shadowColor: SOS_BLUEGREEN,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.25,
               shadowRadius: 8,
@@ -356,7 +359,7 @@ export default function VerifyOtpScreen() {
             {loading ? (
               <ActivityIndicator color="#ffffff" size="small" />
             ) : (
-              <Text className="text-lg font-bold tracking-wide text-white">
+              <Text className="text-lg font-poppins-bold tracking-wide text-sos-white">
                 Verificar
               </Text>
             )}
@@ -368,7 +371,7 @@ export default function VerifyOtpScreen() {
         <View className="flex-col items-center gap-6">
           {/* Resend & Timer */}
           <View className="items-center">
-            <Text className="text-sm text-slate-500 dark:text-slate-400 mb-1">
+            <Text className="text-sm font-sans text-sos-gray dark:text-slate-400 mb-1">
               ¿No recibiste el código?
             </Text>
             <Pressable
@@ -387,16 +390,15 @@ export default function VerifyOtpScreen() {
                 <MaterialIcons
                   name="timer"
                   size={18}
-                  color={scheme === "dark" ? "#64748b" : "#9ca3af"}
+                  color={SOS_GRAY}
                 />
               )}
               <Text
-                className={`text-sm font-semibold ${
+                className={`text-sm font-poppins-semibold ${
                   isResendDisabled
-                    ? "text-slate-400 dark:text-slate-500"
-                    : "text-primary"
+                    ? "text-sos-gray dark:text-slate-500"
+                    : "text-sos-bluegreen"
                 }`}
-                style={!isResendDisabled ? { color: PRIMARY_HEX } : undefined}
               >
                 {resendLoading
                   ? "Enviando..."
@@ -412,11 +414,10 @@ export default function VerifyOtpScreen() {
             accessibilityRole="button"
             accessibilityLabel="Cambiar número de teléfono"
             onPress={handleChangeNumber}
-            className="py-2 px-4 rounded-lg active:bg-blue-50 dark:active:bg-blue-900/20"
+            className="py-2 px-4 rounded-lg active:bg-sos-bluegreen/10 dark:active:bg-sos-bluegreen/20"
           >
             <Text
-              className="text-sm font-bold"
-              style={{ color: PRIMARY_HEX }}
+              className="text-sm font-poppins-bold text-sos-bluegreen"
             >
               Cambiar número
             </Text>
