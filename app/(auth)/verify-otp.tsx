@@ -195,8 +195,8 @@ export default function VerifyOtpScreen() {
 
     try {
       await verifyPhoneOtp(currentUserId, otpCode);
-      // Success - navigate to main app
-      router.replace("/(tabs)");
+      // Success - navigate to company verification step
+      router.replace("/(auth)/verify-company");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Código inválido o expirado. Intenta de nuevo.";

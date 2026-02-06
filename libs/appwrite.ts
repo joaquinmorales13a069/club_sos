@@ -1,4 +1,4 @@
-import { Account, Avatars, Client, ID } from "react-native-appwrite";
+import { Account, Avatars, Client, Databases, ID, Query } from "react-native-appwrite";
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -18,6 +18,7 @@ client
     .setPlatform(appwriteConfig.platform!);
 
 export const account = new Account(client);
+export const databases = new Databases(client);
 const avatars = new Avatars(client);
 
 /**
@@ -67,4 +68,31 @@ export const verifyPhoneOtp = async (userId: string, otp: string) => {
     }
 };
 
+/**
+ * Search for a company by its unique codigo_empresa.
+ * Queries the `empresas` collection filtering by exact match.
+ *
+ * @param codigoEmpresa - The normalised (trimmed + uppercased) company code
+ * @returns The first matching document, or null if none found
+ */
+export const findEmpresaByCodigo = async (codigoEmpresa: string) => {
+    try {
+        const response = await databases.listDocuments(
+            appwriteConfig.databaseId!,
+            appwriteConfig.empresasId!,
+            [Query.equal("codigo_empresa", codigoEmpresa)]
+        );
+
+        if (response.documents.length === 0) {
+            return null;
+        }
+
+        return response.documents[0];
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al buscar la empresa");
+    }
+};
 
