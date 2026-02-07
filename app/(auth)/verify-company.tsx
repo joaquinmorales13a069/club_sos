@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CompanyFoundCard from "@/components/CompanyFoundCard";
-import ProgressDots from "@/components/ProgressDots";
 import TopAppBar from "@/components/TopAppBar";
 import { findEmpresaByCodigo } from "@/libs/appwrite";
 
@@ -21,7 +20,7 @@ import { findEmpresaByCodigo } from "@/libs/appwrite";
 const SOS_BLUEGREEN = "#0066CC";
 
 // Estados that allow company linking (compared case-insensitively)
-const VALID_ESTADOS = ["activa", "activo", "verificada", "verificado"];
+const VALID_ESTADOS = ["activo"];
 
 // Storage key for persisting the empresa document $id
 const STORAGE_KEY = "clubSOS.empresa_id";
@@ -108,7 +107,7 @@ export default function VerifyCompanyScreen() {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, empresaEncontrada.$id);
       // Navigate to next onboarding step
-      router.push("/onboarding/parentesco" as never);
+      router.push("/(auth)/verify-account-type");
     } catch (_error) {
       setErrorMessage("Error al guardar la empresa. Intenta de nuevo.");
     }
@@ -121,11 +120,8 @@ export default function VerifyCompanyScreen() {
   // ─── Render ─────────────────────────────────────────────
   return (
     <SafeAreaView className="flex-1 bg-sos-white dark:bg-[#101822]">
-      {/* Top App Bar */}
-      <TopAppBar title="Vincular Empresa" onBack={handleGoBack} />
-
-      {/* Progress indicators (step 2 of 4) */}
-      <ProgressDots totalSteps={4} activeStep={1} />
+      {/* Top App Bar with step indicator (step 1 of 5) */}
+      <TopAppBar onBack={handleGoBack} currentStep={1} totalSteps={5} />
 
       {/* Main content */}
       <View className="flex-1 px-4">

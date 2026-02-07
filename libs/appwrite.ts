@@ -1,4 +1,11 @@
-import { Account, Avatars, Client, Databases, ID, Query } from "react-native-appwrite";
+import {
+    Account,
+    Avatars,
+    Client,
+    Databases,
+    ID,
+    Query,
+} from "react-native-appwrite";
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -77,11 +84,11 @@ export const verifyPhoneOtp = async (userId: string, otp: string) => {
  */
 export const findEmpresaByCodigo = async (codigoEmpresa: string) => {
     try {
-        const response = await databases.listDocuments(
-            appwriteConfig.databaseId!,
-            appwriteConfig.empresasId!,
-            [Query.equal("codigo_empresa", codigoEmpresa)]
-        );
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.empresasId!,
+            queries: [Query.equal("codigo_empresa", codigoEmpresa)],
+        });
 
         if (response.documents.length === 0) {
             return null;
@@ -95,4 +102,3 @@ export const findEmpresaByCodigo = async (codigoEmpresa: string) => {
         throw new Error("Error al buscar la empresa");
     }
 };
-
