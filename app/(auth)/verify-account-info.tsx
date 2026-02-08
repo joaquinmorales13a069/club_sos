@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import TopAppBar from "@/components/TopAppBar";
 import {
+    createMiembro,
     getVerifiedPhone,
     loadMiembroDraft,
     saveMiembroDraft,
@@ -208,19 +209,17 @@ export default function VerifyAccountInfoScreen() {
                 correo: noTengoCorreo ? null : correo.trim() || null,
             };
 
+            // Persist draft locally (so account-activation can display it)
             await saveMiembroDraft(draft as unknown as Record<string, unknown>);
 
-            /**
-             * TODO: The final step (/(auth)/review or equivalent) will read:
-             *   - clubSOS.empresa_id
-             *   - clubSOS.miembro.parentesco
-             *   - clubSOS.miembro.titular_miembro_id (only if parentesco = conyuge / hijo / familiar)
-             *   - clubSOS.miembro.draft
-             * And create the final `miembros` document in Appwrite.
-             */
-            router.push("/(auth)/review" as never);
+            // Push the miembro document to the Appwrite `miembros` collection.
+            // createMiembro reads empresa_id, parentesco and titular_miembro_id
+            // from AsyncStorage and merges them with the draft fields.
+            await createMiembro(draft as unknown as Record<string, unknown>);
+
+            router.push("/(auth)/account-activation" as never);
         } catch (error) {
-            console.error("[verify-account-info] Error saving draft:", error);
+            console.error("[verify-account-info] Error creating miembro:", error);
         } finally {
             setIsSubmitting(false);
         }
@@ -268,6 +267,7 @@ export default function VerifyAccountInfoScreen() {
                 className="flex-1 px-6"
                 contentContainerStyle={{ paddingTop: 8, paddingBottom: 120 }}
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 showsVerticalScrollIndicator={false}
             >
                 {/* Title + Description */}

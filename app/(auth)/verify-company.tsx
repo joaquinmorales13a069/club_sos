@@ -7,6 +7,7 @@ import {
   Pressable,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   useColorScheme,
   View,
 } from "react-native";
@@ -121,6 +122,7 @@ export default function VerifyCompanyScreen() {
 
   // ─── Render ─────────────────────────────────────────────
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <SafeAreaView className="flex-1 bg-sos-white dark:bg-[#101822]">
       {/* Top App Bar with step indicator (step 1 of 5) */}
       <TopAppBar onBack={handleGoBack} currentStep={1} totalSteps={5} />
@@ -248,5 +250,6 @@ export default function VerifyCompanyScreen() {
         </View>
       </View>
     </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }

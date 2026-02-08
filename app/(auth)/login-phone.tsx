@@ -3,10 +3,12 @@ import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   Alert,
+  Keyboard,
   Modal,
   Pressable,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   useColorScheme,
   View,
 } from "react-native";
@@ -109,6 +111,7 @@ export default function LoginPhoneScreen() {
   };
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <SafeAreaView className="flex-1 bg-sos-white dark:bg-[#101822]">
       {/* Top App Bar */}
       <View className="flex-row items-center justify-between px-4 py-4">
@@ -295,5 +298,6 @@ export default function LoginPhoneScreen() {
         </View>
       </Modal>
     </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }

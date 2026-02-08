@@ -178,6 +178,7 @@ export default function LinkMainAccountScreen() {
                 className="flex-1 px-6"
                 contentContainerStyle={{ paddingTop: 8, paddingBottom: 120 }}
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 showsVerticalScrollIndicator={false}
             >
                 {/* Title + Description */}

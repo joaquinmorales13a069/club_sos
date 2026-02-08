@@ -10,6 +10,7 @@ export default function AuthLayout() {
       <Stack.Screen name="verify-account-type" />
       <Stack.Screen name="link-main-account" />
       <Stack.Screen name="verify-account-info" />
+      <Stack.Screen name="account-activation" />
     </Stack>
   );
 }

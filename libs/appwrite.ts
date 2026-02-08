@@ -212,6 +212,90 @@ export const saveMiembroDraft = async (
 };
 
 /**
+ * Create a new miembro document in the `miembros` Appwrite collection.
+ * Gathers onboarding context (empresa, parentesco, titular link) from
+ * AsyncStorage and merges it with the personal-info draft.
+ *
+ * @param draft - Personal info fields from the verify-account-info form
+ * @returns The created Appwrite document
+ */
+export const createMiembro = async (
+    draft: Record<string, unknown>,
+) => {
+    try {
+        // Read onboarding context persisted by previous screens
+        const [empresaId, parentesco, titularMiembroId] = await Promise.all([
+            AsyncStorage.getItem("clubSOS.empresa_id"),
+            AsyncStorage.getItem("clubSOS.miembro.parentesco"),
+            AsyncStorage.getItem("clubSOS.miembro.titular_miembro_id"),
+        ]);
+
+        if (!empresaId) {
+            throw new Error("No se encontró la empresa vinculada.");
+        }
+
+        if (!parentesco) {
+            throw new Error("No se encontró el tipo de miembro.");
+        }
+
+        // Get the current Appwrite Auth user ID
+        const currentUser = await account.get();
+
+        // Build the document payload matching all miembros columns
+        const data: Record<string, unknown> = {
+            // Required fields
+            empresa_id: empresaId,
+            parentesco,
+            nombre_completo: draft.nombre_completo,
+            fecha_nacimiento: draft.fecha_nacimiento,
+            sexo: (draft.sexo as string).toLowerCase(),
+            telefono: draft.telefono,
+            rol: "miembro",
+            activo: false,
+            auth_user_id: currentUser.$id,
+
+            // Nullable fields
+            documento_identidad: draft.documento_identidad ?? null,
+            correo: draft.correo ?? null,
+            titular_miembro_id:
+                parentesco !== "titular" && titularMiembroId
+                    ? titularMiembroId
+                    : null,
+
+            // EA fields — populated later by an Appwrite function
+            ea_customer_id: null,
+            ea_customer_last_sync: null,
+            ea_customer_sync: false,
+        };
+
+        const document = await databases.createDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.miembrosId!,
+            ID.unique(),
+            data,
+        );
+
+        // Update the Appwrite Auth user profile with name and email
+        await account.updateName(draft.nombre_completo as string);
+
+        const email = draft.correo as string | null;
+        if (email) {
+            // updateEmail requires a password; phone-auth users don't have one,
+            // so we set it to the empty string which Appwrite accepts for
+            // phone-session users.
+            await account.updateEmail(email, "");
+        }
+
+        return document;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al crear el miembro");
+    }
+};
+
+/**
  * Search for a company by its unique codigo_empresa.
  * Queries the `empresas` collection filtering by exact match.
  *
@@ -236,5 +320,33 @@ export const findEmpresaByCodigo = async (codigoEmpresa: string) => {
             throw new Error(error.message);
         }
         throw new Error("Error al buscar la empresa");
+    }
+};
+
+/**
+ * Look up a miembro document by the current Appwrite Auth user ID.
+ * Returns the first matching document, or null if none found.
+ *
+ * @param authUserId - The Appwrite Auth user $id
+ * @returns The miembro document or null
+ */
+export const findMiembroByAuthUserId = async (authUserId: string) => {
+    try {
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.miembrosId!,
+            queries: [Query.equal("auth_user_id", authUserId)],
+        });
+
+        if (response.documents.length === 0) {
+            return null;
+        }
+
+        return response.documents[0];
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al buscar el miembro");
     }
 };

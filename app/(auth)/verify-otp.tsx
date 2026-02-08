@@ -4,15 +4,22 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   Pressable,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   useColorScheme,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { sendPhoneOtp, verifyPhoneOtp } from "@/libs/appwrite";
+import {
+  account,
+  findMiembroByAuthUserId,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+} from "@/libs/appwrite";
 
 // SOS Brand Colors (from tailwind.config.js)
 const SOS_BLUEGREEN = "#0066CC";
@@ -195,7 +202,23 @@ export default function VerifyOtpScreen() {
 
     try {
       await verifyPhoneOtp(currentUserId, otpCode);
-      // Success - navigate to company verification step
+
+      // Check if this auth user already has a miembro record
+      const currentUser = await account.get();
+      const existingMiembro = await findMiembroByAuthUserId(currentUser.$id);
+
+      if (existingMiembro) {
+        if (existingMiembro.activo === true) {
+          // Already approved — go straight to the main app
+          router.replace("/(tabs)" as never);
+        } else {
+          // Miembro exists but pending approval — go to activation screen
+          router.replace("/(auth)/account-activation" as never);
+        }
+        return;
+      }
+
+      // No miembro yet — continue with the onboarding flow
       router.push("/(auth)/verify-company");
     } catch (err) {
       const message =
@@ -257,6 +280,7 @@ export default function VerifyOtpScreen() {
   };
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <SafeAreaView className="flex-1 bg-sos-white dark:bg-[#101822]">
       {/* Top App Bar */}
       <View className="flex-row items-center justify-between px-4 py-4">
@@ -425,5 +449,6 @@ export default function VerifyOtpScreen() {
         </View>
       </View>
     </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
