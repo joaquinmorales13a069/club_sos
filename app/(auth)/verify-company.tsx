@@ -22,8 +22,9 @@ const SOS_BLUEGREEN = "#0066CC";
 // Estados that allow company linking (compared case-insensitively)
 const VALID_ESTADOS = ["activo"];
 
-// Storage key for persisting the empresa document $id
+// Storage keys for persisting empresa data across onboarding steps
 const STORAGE_KEY = "clubSOS.empresa_id";
+const EMPRESA_NAME_KEY = "clubSOS.empresa_nombre";
 
 type EmpresaEncontrada = {
   $id: string;
@@ -106,6 +107,7 @@ export default function VerifyCompanyScreen() {
 
     try {
       await AsyncStorage.setItem(STORAGE_KEY, empresaEncontrada.$id);
+      await AsyncStorage.setItem(EMPRESA_NAME_KEY, empresaEncontrada.nombre_empresa);
       // Navigate to next onboarding step
       router.push("/(auth)/verify-account-type");
     } catch (_error) {

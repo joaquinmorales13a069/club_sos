@@ -8,6 +8,7 @@ export default function AuthLayout() {
       <Stack.Screen name="verify-otp" />
       <Stack.Screen name="verify-company" />
       <Stack.Screen name="verify-account-type" />
+      <Stack.Screen name="link-main-account" />
     </Stack>
   );
 }
