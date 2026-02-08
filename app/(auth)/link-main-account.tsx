@@ -157,7 +157,7 @@ export default function LinkMainAccountScreen() {
                 }),
             );
 
-            router.push("/onboarding/member-info" as never);
+            router.push("/(auth)/verify-account-info" as never);
         } catch (error) {
             console.error("[link-main-account] Error saving titular:", error);
         }
@@ -186,8 +186,11 @@ export default function LinkMainAccountScreen() {
                         Busca al titular
                     </Text>
                     <Text className="font-sans text-base leading-relaxed text-sos-gray dark:text-gray-300">
-                        Ingresa los datos del titular para vincular tu
-                        cuenta como beneficiario.
+                        Ingresa los datos del trabajador de{" "}
+                        <Text className="font-poppins-semibold text-gray-800 dark:text-gray-200">
+                            {empresaName || "la empresa"}
+                        </Text>{" "}
+                        para vincular tu cuenta como beneficiario.
                     </Text>
                 </View>
 
@@ -354,17 +357,17 @@ export default function LinkMainAccountScreen() {
                     accessibilityState={{ disabled: !foundEmployee }}
                     onPress={handleConfirm}
                     disabled={!foundEmployee}
-                    className={`w-full flex-row items-center justify-center rounded-xl h-12 px-5 bg-sos-bluegreen ${
+                    className={`w-full flex-row items-center justify-center rounded-full h-14 bg-sos-bluegreen active:opacity-90 ${
                         !foundEmployee ? "opacity-50" : ""}`}
                     style={{
                         shadowColor: SOS_BLUEGREEN,
                         shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 8,
-                        elevation: 4,
+                        shadowOpacity: 0.39,
+                        shadowRadius: 14,
+                        elevation: 6,
                     }}
                 >
-                    <Text className="text-base font-poppins-bold leading-normal tracking-[0.015em] text-sos-white">
+                    <Text className="text-base font-poppins-bold text-sos-white">
                         Confirmar vínculo
                     </Text>
                 </Pressable>

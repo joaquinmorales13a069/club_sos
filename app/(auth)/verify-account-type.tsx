@@ -15,7 +15,7 @@ const STORAGE_KEY = "clubSOS.miembro.parentesco";
 const SOS_BLUEGREEN = "#0066CC";
 
 // ─── Types ─────────────────────────────────────────────────
-type ParentescoType = "titular" | "conyuge" | "hijo";
+type ParentescoType = "titular" | "conyuge" | "hijo" | "familiar";
 
 interface MemberTypeOption {
     value: ParentescoType;
@@ -49,12 +49,21 @@ const MEMBER_TYPES: MemberTypeOption[] = [
     },
     {
         value: "hijo",
-        label: "Hijo",
-        subtitle: "Dependiente directo",
+        label: "Dependiente",
+        subtitle: "Hijo/a",
         icon: "face",
         iconBgLight: "#f0fdfa", // Tailwind teal-50
         iconBgDark: "rgba(19, 78, 74, 0.3)", // Tailwind teal-900/30
         iconColor: "#0d9488", // Tailwind teal-600
+    },
+    {
+        value: "familiar",
+        label: "Familiar",
+        subtitle: "Padre, madre, tío/a u otro pariente",
+        icon: "groups",
+        iconBgLight: "#fefce8", // Tailwind yellow-50
+        iconBgDark: "rgba(113, 63, 18, 0.3)", // Tailwind yellow-900/30
+        iconColor: "#ca8a04", // Tailwind yellow-600
     },
 ];
 
@@ -79,16 +88,9 @@ export default function VerifyAccountTypeScreen() {
             await AsyncStorage.setItem(STORAGE_KEY, selectedType);
 
             if (selectedType === "titular") {
-                /**
-                 * TODO: /onboarding/member-info — Future screen that will collect:
-                 *   • nombre_completo
-                 *   • sexo
-                 *   • fecha_nacimiento
-                 *   • documento_identidad
-                 * This data will be used to create a miembro document in Appwrite
-                 * with parentesco = "titular".
-                 */
-                router.push("/onboarding/member-info" as never);
+                // Titular skips link-main-account and goes straight to
+                // the personal-info form (step 4).
+                router.push("/(auth)/verify-account-info" as never);
             } else {
                 // Navigate to the link-main-account screen where the user
                 // searches for the titular employee and links their account.
@@ -239,12 +241,6 @@ export default function VerifyAccountTypeScreen() {
                     <Text className="text-base font-poppins-bold text-sos-white">
                         Continuar
                     </Text>
-                    <MaterialIcons
-                        name="arrow-forward"
-                        size={20}
-                        color="#ffffff"
-                        style={{ marginLeft: 8 }}
-                    />
                 </Pressable>
             </View>
         </SafeAreaView>

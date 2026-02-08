@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
     Account,
     Avatars,
@@ -126,6 +127,87 @@ export const findTitular = async (
             throw new Error(error.message);
         }
         throw new Error("Error al buscar el titular");
+    }
+};
+
+// ─── Verified Phone (AsyncStorage) ──────────────────────────
+
+const PHONE_KEY = "clubSOS.miembro.telefono";
+
+/**
+ * Persist the verified phone number in AsyncStorage.
+ * Should be called once during the login/OTP flow so that
+ * downstream screens can read it without a backend call.
+ *
+ * @param phoneE164 - Phone number in E.164 format (e.g., +50588888888)
+ */
+export const saveVerifiedPhone = async (phoneE164: string): Promise<void> => {
+    try {
+        await AsyncStorage.setItem(PHONE_KEY, phoneE164);
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al guardar el teléfono verificado");
+    }
+};
+
+/**
+ * Retrieve the verified phone number from AsyncStorage.
+ * Returns the phone in E.164 format, or an empty string if not stored yet.
+ */
+export const getVerifiedPhone = async (): Promise<string> => {
+    try {
+        const phone = await AsyncStorage.getItem(PHONE_KEY);
+        return phone ?? "";
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener el teléfono verificado");
+    }
+};
+
+// ─── Miembro Draft (AsyncStorage) ───────────────────────────
+
+const DRAFT_KEY = "clubSOS.miembro.draft";
+
+/**
+ * Load the current miembro draft from AsyncStorage.
+ * Returns the parsed object or null if nothing was stored.
+ */
+export const loadMiembroDraft = async (): Promise<Record<string, unknown> | null> => {
+    try {
+        const raw = await AsyncStorage.getItem(DRAFT_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al cargar el borrador del miembro");
+    }
+};
+
+/**
+ * Merge the provided fields into the existing miembro draft in AsyncStorage.
+ * Any pre-existing keys that are not in `fields` are preserved.
+ *
+ * @param fields - Partial draft object to merge
+ */
+export const saveMiembroDraft = async (
+    fields: Record<string, unknown>,
+): Promise<void> => {
+    try {
+        const existing = await loadMiembroDraft();
+        await AsyncStorage.setItem(
+            DRAFT_KEY,
+            JSON.stringify({ ...existing, ...fields }),
+        );
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al guardar el borrador del miembro");
     }
 };
 

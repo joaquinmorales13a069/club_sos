@@ -16,7 +16,7 @@ import CountryPicker, {
 } from "react-native-country-picker-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { sendPhoneOtp } from "@/libs/appwrite";
+import { sendPhoneOtp, saveVerifiedPhone } from "@/libs/appwrite";
 
 // Using colors from tailwind.config.js for inline styles (e.g., icons)
 const SOS_BLUEGREEN = "#0066CC";
@@ -83,6 +83,11 @@ export default function LoginPhoneScreen() {
     setLoading(true);
     try {
       const response = await sendPhoneOtp(phoneE164);
+
+      // Persist the phone locally so downstream screens can read it
+      // without an extra Appwrite backend call.
+      await saveVerifiedPhone(phoneE164);
+
       // Navigate to verify-otp screen on success
       router.push({
         pathname: "/(auth)/verify-otp",
