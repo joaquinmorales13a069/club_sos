@@ -275,16 +275,8 @@ export const createMiembro = async (
             data,
         );
 
-        // Update the Appwrite Auth user profile with name and email
+        // Update the Appwrite Auth user profile with the member's name
         await account.updateName(draft.nombre_completo as string);
-
-        const email = draft.correo as string | null;
-        if (email) {
-            // updateEmail requires a password; phone-auth users don't have one,
-            // so we set it to the empty string which Appwrite accepts for
-            // phone-session users.
-            await account.updateEmail(email, "");
-        }
 
         return document;
     } catch (error) {
