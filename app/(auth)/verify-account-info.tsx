@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import TopAppBar from "@/components/TopAppBar";
 import {
     createMiembro,
+    findMiembroByCorreo,
     getVerifiedPhone,
     loadMiembroDraft,
     saveMiembroDraft,
@@ -192,6 +193,19 @@ export default function VerifyAccountInfoScreen() {
 
         setIsSubmitting(true);
         try {
+            const normalizedCorreo = noTengoCorreo ? "" : correo.trim().toLowerCase();
+
+            if (normalizedCorreo) {
+                const existingMiembro = await findMiembroByCorreo(normalizedCorreo);
+                if (existingMiembro) {
+                    setErrors((prev) => ({
+                        ...prev,
+                        correo: "Este correo ya está registrado por otro miembro",
+                    }));
+                    return;
+                }
+            }
+
             // Parse DD/MM/AAAA → ISO string
             const parts = fechaNacimiento.split("/");
             const isoDate = new Date(
@@ -206,7 +220,7 @@ export default function VerifyAccountInfoScreen() {
                 fecha_nacimiento: isoDate,
                 sexo: sexo!,
                 telefono,
-                correo: noTengoCorreo ? null : correo.trim() || null,
+                correo: normalizedCorreo || null,
             };
 
             // Persist draft locally (so account-activation can display it)

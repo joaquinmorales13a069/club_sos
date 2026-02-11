@@ -342,3 +342,36 @@ export const findMiembroByAuthUserId = async (authUserId: string) => {
         throw new Error("Error al buscar el miembro");
     }
 };
+
+/**
+ * Look up a miembro document by correo (normalised to lowercase).
+ * Returns the first matching document, or null if none found.
+ *
+ * @param correo - Email address to check
+ * @returns The miembro document or null
+ */
+export const findMiembroByCorreo = async (correo: string) => {
+    try {
+        const normalizedCorreo = correo.trim().toLowerCase();
+        if (!normalizedCorreo) {
+            return null;
+        }
+
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.miembrosId!,
+            queries: [Query.equal("correo", normalizedCorreo)],
+        });
+
+        if (response.documents.length === 0) {
+            return null;
+        }
+
+        return response.documents[0];
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al validar el correo del miembro");
+    }
+};
