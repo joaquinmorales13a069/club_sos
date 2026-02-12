@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { type Href, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
+  Image,
   ImageBackground,
   Modal,
   Pressable,
@@ -41,12 +42,12 @@ export default function WelcomeScreen() {
       <View className="flex-1">
         {/* Header: Logo */}
         <View className="justify-center items-center pt-10 pb-6">
-          <Text
-            accessibilityLabel="Logo de ClubSOS"
-            className="text-3xl tracking-tight text-sos-bluegreen font-poppins-bold"
-          >
-            ClubSOS
-          </Text>
+          <Image
+            source={require("../../assets/images/LOGO-clubSOS.png")}
+            accessibilityLabel="Logo de ClubSOS Medical"
+            resizeMode="contain"
+            className="h-20 w-72"
+          />
         </View>
 
         {/* Main Content: Hero */}
