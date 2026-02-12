@@ -1,15 +1,11 @@
-import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import BeneficioCard, { type Beneficio } from "@/components/BeneficioCard";
 import CitaCard, { type Cita } from "@/components/CitaCard";
 import MembresiaCard from "@/components/MembresiaCard";
 import SupportButton from "@/components/SupportButton";
-import { THEME_COLORS } from "@/libs/themeColors";
-
-const SOS_BLUEGREEN = THEME_COLORS.sosBluegreen;
 
 const miembro = {
   nombre_completo: "Joaquin Morales",
@@ -87,7 +83,12 @@ export default function HomeTabScreen() {
         <View className="pt-4 pb-6">
           <View className="flex-row items-start gap-3">
             <View className="h-12 w-12 items-center justify-center rounded-full bg-sos-bluegreen/10">
-              <MaterialIcons name="person" size={22} color={SOS_BLUEGREEN} />
+              <Image
+                source={require("../../assets/images/GOTA.png")}
+                accessibilityLabel="Icono de usuario ClubSOS"
+                resizeMode="contain"
+                className="h-7 w-7"
+              />
             </View>
 
             <View className="flex-1">
