@@ -111,7 +111,7 @@ export default function VerifyCompanyScreen() {
       await AsyncStorage.setItem(EMPRESA_NAME_KEY, empresaEncontrada.nombre_empresa);
       // Navigate to next onboarding step
       router.push("/(auth)/verify-account-type");
-    } catch (_error) {
+    } catch {
       setErrorMessage("Error al guardar la empresa. Intenta de nuevo.");
     }
   };

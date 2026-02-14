@@ -3,7 +3,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { THEME_COLORS } from "@/libs/themeColors";
 
-const SOS_BLUEGREEN = THEME_COLORS.sosBluegreen;
 const SOS_WHITE = THEME_COLORS.sosWhite;
 
 interface MembresiaCardProps {
