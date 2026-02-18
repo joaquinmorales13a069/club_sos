@@ -30,27 +30,12 @@ export const databases = new Databases(client);
 const avatars = new Avatars(client);
 
 /**
- * Delete any active session so a new one can be created.
- * Silently ignores errors (e.g. when no session exists).
- */
-const deleteExistingSession = async () => {
-    try {
-        await account.deleteSession("current");
-    } catch {
-        // No active session – nothing to delete
-    }
-};
-
-/**
  * Send OTP via SMS to the specified phone number
  * @param phoneE164 - Phone number in E.164 format (e.g., +50588888888)
  * @returns Promise with the token/userId for OTP verification
  */
 export const sendPhoneOtp = async (phoneE164: string) => {
     try {
-        // Clear any lingering session before starting a new auth flow
-        await deleteExistingSession();
-
         // Create a phone token for SMS OTP verification
         // This triggers Appwrite to send an SMS with the verification code
         const token = await account.createPhoneToken(ID.unique(), phoneE164);
@@ -76,9 +61,6 @@ export const sendPhoneOtp = async (phoneE164: string) => {
  */
 export const verifyPhoneOtp = async (userId: string, otp: string) => {
     try {
-        // Clear any stale session that might block creating the new one
-        await deleteExistingSession();
-
         const session = await account.createSession(userId, otp);
 
         if (!session) {
