@@ -6,14 +6,14 @@ import {
     LayoutAnimation,
     Platform,
     Pressable,
-    ScrollView,
     Text,
     TextInput,
     UIManager,
     useColorScheme,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import TabScreenView from "@/components/TabScreenView";
+import TabScrollView from "@/components/TabScrollView";
 
 // Enable LayoutAnimation on Android
 if (
@@ -138,10 +138,9 @@ export default function PerfilTabScreen() {
 
     // ─── Render ─────────────────────────────────────────────
     return (
-        <SafeAreaView className="flex-1 bg-sos-white dark:bg-[#101822]">
-            <ScrollView
+        <TabScreenView className="flex-1 bg-sos-white dark:bg-[#101822]">
+            <TabScrollView
                 className="flex-1"
-                contentContainerStyle={{ paddingBottom: 40 }}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
@@ -252,8 +251,8 @@ export default function PerfilTabScreen() {
                         ClubSOS v1.0.0
                     </Text>
                 </View>
-            </ScrollView>
-        </SafeAreaView>
+            </TabScrollView>
+        </TabScreenView>
     );
 }
 

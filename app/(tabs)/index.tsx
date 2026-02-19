@@ -1,6 +1,8 @@
 import React from "react";
-import { Alert, Image, ScrollView, Text, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Alert, Image, Text, View } from "react-native";
+
+import TabScreenView from "@/components/TabScreenView";
+import TabScrollView from "@/components/TabScrollView";
 
 import BeneficioCard, { type Beneficio } from "@/components/BeneficioCard";
 import CitaCard, { type Cita } from "@/components/CitaCard";
@@ -72,18 +74,12 @@ const citaMock: Cita = {
 
 export default function HomeTabScreen() {
   const primerNombre = miembro.nombre_completo.trim().split(/\s+/)[0] ?? "Usuario";
-  const { bottom: safeBottom } = useSafeAreaInsets();
-  // Extra scroll room so the last item clears the floating tab bar when scrolled
-  // to the end. Content now extends to the full screen bottom (no bottom safe
-  // area), so padding = tab bar height + its margin + device safe area inset.
-  const scrollPaddingBottom = 70 + 20 + safeBottom;
 
   return (
-    <SafeAreaView className="flex-1 bg-sos-white" edges={["top", "left", "right"]}>
-      <ScrollView
+    <TabScreenView className="flex-1 bg-sos-white">
+      <TabScrollView
         className="flex-1"
         contentContainerClassName="px-4"
-        contentContainerStyle={{ paddingBottom: scrollPaddingBottom }}
         showsVerticalScrollIndicator={false}
       >
         <View className="pt-4 pb-6">
@@ -144,7 +140,7 @@ export default function HomeTabScreen() {
         <View className="mt-6">
           <SupportButton onPress={() => Alert.alert("WhatsApp", "Abrir soporte por WhatsApp")} />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </TabScrollView>
+    </TabScreenView>
   );
 }
