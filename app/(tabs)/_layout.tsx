@@ -1,10 +1,10 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
+
 import { THEME_COLORS } from "@/libs/themeColors";
 
 const SOS_BLUEGREEN = THEME_COLORS.sosBluegreen;
-const SOS_GRAY = THEME_COLORS.sosGray;
 const SOS_WHITE = THEME_COLORS.sosWhite;
 
 const TAB_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
@@ -29,15 +29,25 @@ export default function TabsLayout() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: SOS_BLUEGREEN,
-        tabBarInactiveTintColor: SOS_GRAY,
+        tabBarActiveTintColor: SOS_WHITE,
+        tabBarInactiveTintColor: "rgba(255,255,255,0.50)",
         tabBarStyle: {
+          position: "absolute",
           height: 70,
+          marginHorizontal: 16,
+          marginBottom: 20,
+          borderRadius: 24,
+          borderTopWidth: 0,
           paddingBottom: 8,
           paddingTop: 8,
-          borderTopWidth: 1,
-          borderTopColor: SOS_GRAY,
-          backgroundColor: SOS_WHITE,
+          backgroundColor: SOS_BLUEGREEN,
+          // iOS shadow
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.18,
+          shadowRadius: 14,
+          // Android elevation
+          elevation: 10,
         },
         tabBarLabelStyle: {
           fontFamily: "Poppins_500Medium",
