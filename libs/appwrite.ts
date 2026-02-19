@@ -326,6 +326,18 @@ export const findMiembroByAuthUserId = async (authUserId: string) => {
 };
 
 /**
+ * Returns the current Appwrite Auth user if an active session exists,
+ * or null if the user is not authenticated.
+ */
+export const getCurrentUser = async () => {
+    try {
+        return await account.get();
+    } catch {
+        return null;
+    }
+};
+
+/**
  * Look up a miembro document by correo (normalised to lowercase).
  * Returns the first matching document, or null if none found.
  *
