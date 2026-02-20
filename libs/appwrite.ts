@@ -15,6 +15,7 @@ export const appwriteConfig = {
     databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID,
     miembrosId: process.env.EXPO_PUBLIC_APPWRITE_MIEMBROS_ID,
     empresasId: process.env.EXPO_PUBLIC_APPWRITE_EMPRESAS_ID,
+    beneficiosId: process.env.EXPO_PUBLIC_APPWRITE_BENEFICIOS_ID,
 };
 
 export const client = new Client();
@@ -367,5 +368,132 @@ export const findMiembroByCorreo = async (correo: string) => {
             throw new Error(error.message);
         }
         throw new Error("Error al validar el correo del miembro");
+    }
+};
+
+// ─── Beneficios ──────────────────────────────────────────────
+
+/**
+ * Reserved empresa_id value that marks a beneficio as visible
+ * to all members, regardless of their empresa.
+ */
+export const EMPRESA_GENERAL_ID = "GENERAL";
+
+export type EstadoBeneficio = "activo" | "expirado";
+export type TipoBeneficio = "descuento" | "promocion" | "anuncio";
+
+export interface BeneficioData {
+    empresa_id: string[];
+    titulo: string;
+    descripcion: string;
+    fecha_inicio: string;
+    fecha_fin: string | null;
+    estado_beneficio: EstadoBeneficio;
+    creado_por: string;
+    tipo_beneficio: TipoBeneficio | null;
+}
+
+/**
+ * Fetch all beneficios visible for a given empresa.
+ * Returns documents where empresa_id contains empresaId OR "GENERAL",
+ * ordered by fecha_inicio descending.
+ *
+ * @param empresaId - The empresa $id of the current miembro
+ */
+export const getBeneficiosByEmpresa = async (empresaId: string) => {
+    try {
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.beneficiosId!,
+            queries: [
+                Query.or([
+                    Query.equal("empresa_id", empresaId),
+                    Query.equal("empresa_id", EMPRESA_GENERAL_ID),
+                ]),
+                Query.orderDesc("fecha_inicio"),
+            ],
+        });
+
+        return response.documents;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener los beneficios");
+    }
+};
+
+/**
+ * Create a new beneficio document.
+ * Should only be called by users with rol === "admin".
+ *
+ * @param data - The beneficio fields to create
+ * @returns The created Appwrite document
+ */
+export const createBeneficio = async (data: BeneficioData) => {
+    try {
+        const document = await databases.createDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.beneficiosId!,
+            ID.unique(),
+            data,
+        );
+
+        return document;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al crear el beneficio");
+    }
+};
+
+/**
+ * Update an existing beneficio document.
+ * Should only be called by users with rol === "admin".
+ *
+ * @param id   - The $id of the beneficio document to update
+ * @param data - Partial beneficio fields to update (creado_por is immutable)
+ * @returns The updated Appwrite document
+ */
+export const updateBeneficio = async (
+    id: string,
+    data: Partial<Omit<BeneficioData, "creado_por">>,
+) => {
+    try {
+        const document = await databases.updateDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.beneficiosId!,
+            id,
+            data,
+        );
+
+        return document;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al actualizar el beneficio");
+    }
+};
+
+/**
+ * Delete a beneficio document.
+ * Should only be called by users with rol === "admin".
+ *
+ * @param id - The $id of the beneficio document to delete
+ */
+export const deleteBeneficio = async (id: string) => {
+    try {
+        await databases.deleteDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.beneficiosId!,
+            id,
+        );
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al eliminar el beneficio");
     }
 };
