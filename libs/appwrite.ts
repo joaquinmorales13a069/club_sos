@@ -1,7 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
     Account,
-    Avatars,
     Client,
     Databases,
     ID,
@@ -29,7 +28,7 @@ client
 
 export const account = new Account(client);
 export const databases = new Databases(client);
-const avatars = new Avatars(client);
+
 
 /**
  * Send OTP via SMS to the specified phone number

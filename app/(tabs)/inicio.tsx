@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Image, Text, View, ActivityIndicator } from "react-native";
+import {
+    Alert,
+    Image,
+    Text,
+    View,
+    ActivityIndicator,
+    useColorScheme,
+} from "react-native";
 
 import TabScreenView from "@/components/TabScreenView";
 import TabScrollView from "@/components/TabScrollView";
@@ -34,6 +41,8 @@ export default function HomeTabScreen() {
     const [beneficios, setBeneficios] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const scheme = useColorScheme();
+    const isDark = scheme === "dark";
 
     useEffect(() => {
         loadUserData();
@@ -81,13 +90,13 @@ export default function HomeTabScreen() {
 
     if (loading) {
         return (
-            <TabScreenView className="flex-1 bg-sos-white">
+            <TabScreenView className="flex-1 bg-sos-white dark:bg-[#101822]">
                 <View className="items-center justify-center flex-1">
                     <ActivityIndicator
                         size="large"
                         color={THEME_COLORS.sosBluegreen}
                     />
-                    <Text className="mt-4 text-sm text-sos-gray font-poppins-medium">
+                    <Text className="mt-4 text-sm text-sos-gray dark:text-gray-400 font-poppins-medium">
                         Cargando...
                     </Text>
                 </View>
@@ -97,9 +106,9 @@ export default function HomeTabScreen() {
 
     if (error) {
         return (
-            <TabScreenView className="flex-1 bg-sos-white">
+            <TabScreenView className="flex-1 bg-sos-white dark:bg-[#101822]">
                 <View className="items-center justify-center flex-1 px-4">
-                    <Text className="text-base text-center text-red-600 font-poppins-medium">
+                    <Text className="text-base text-center text-red-600 dark:text-red-400 font-poppins-medium">
                         {error}
                     </Text>
                 </View>
@@ -108,7 +117,7 @@ export default function HomeTabScreen() {
     }
 
     return (
-        <TabScreenView className="flex-1 bg-sos-white">
+        <TabScreenView className="flex-1 bg-sos-white dark:bg-[#101822]">
             <TabScrollView
                 className="flex-1"
                 contentContainerClassName="px-4"
@@ -116,20 +125,20 @@ export default function HomeTabScreen() {
             >
                 <View className="pt-4 pb-6">
                     <View className="flex-row items-start gap-3">
-                        <View className="items-center justify-center w-12 h-12 rounded-full bg-sos-bluegreen/10">
+                        <View className="items-center self-center justify-center rounded-full h-14 w-14">
                             <Image
-                                source={require("../../assets/images/GOTA.png")}
+                                source={require("../../assets/images/USUARIO-ICONO.png")}
                                 accessibilityLabel="Icono de usuario ClubSOS"
                                 resizeMode="contain"
-                                className="h-7 w-7"
+                                className="h-14 w-14"
                             />
                         </View>
 
                         <View className="flex-1">
-                            <Text className="text-2xl leading-tight text-gray-900 font-poppins-bold">
+                            <Text className="text-3xl leading-tight text-sos-bluegreen dark:text-sos-white font-poppins-bold">
                                 Hola {primerNombre}
                             </Text>
-                            <Text className="mt-1 text-sm leading-6 text-sos-gray">
+                            <Text className="mt-1 text-sm leading-6 text-sos-gray dark:text-gray-400 font-poppins-semibold">
                                 Bienvenido a ClubSOS. ¿En qué te podemos ayudar
                                 hoy?
                             </Text>
@@ -150,17 +159,17 @@ export default function HomeTabScreen() {
 
                 <View className="mt-7">
                     <View className="flex-row items-center justify-between mb-3">
-                        <Text className="text-xl text-gray-900 font-poppins-bold">
+                        <Text className="text-xl text-gray-900 dark:text-sos-white font-poppins-bold">
                             Beneficios
                         </Text>
-                        <Text className="text-sm text-sos-bluegreen font-poppins-medium">
+                        <Text className="text-sm text-sos-bluegreen dark:text-sos-bluegreen font-poppins-medium">
                             Ver todos
                         </Text>
                     </View>
 
                     {beneficios.length === 0 ? (
-                        <View className="px-4 py-8 rounded-2xl bg-gray-50">
-                            <Text className="text-sm text-center text-sos-gray font-poppins-medium">
+                        <View className="px-4 py-8 rounded-2xl bg-gray-50 dark:bg-[#151f2b]">
+                            <Text className="text-sm text-center text-sos-gray dark:text-gray-400 font-poppins-medium">
                                 No hay beneficios disponibles en este momento
                             </Text>
                         </View>
@@ -178,10 +187,10 @@ export default function HomeTabScreen() {
 
                 <View className="mt-7">
                     <View className="flex-row items-center justify-between mb-3">
-                        <Text className="text-xl text-gray-900 font-poppins-bold">
+                        <Text className="text-xl text-gray-900 dark:text-sos-white font-poppins-bold">
                             Mis citas
                         </Text>
-                        <Text className="text-sm text-sos-bluegreen font-poppins-medium">
+                        <Text className="text-sm text-sos-bluegreen dark:text-sos-bluegreen font-poppins-medium">
                             Ver todas
                         </Text>
                     </View>
