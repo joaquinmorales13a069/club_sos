@@ -2,22 +2,17 @@ import React from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { THEME_COLORS } from "@/libs/themeColors";
+import type { BeneficioData, TipoBeneficio } from "../type";
 
 const SOS_BLUEGREEN = THEME_COLORS.sosBluegreen;
 const SOS_RED = THEME_COLORS.sosRed;
 const SOS_GRAY = THEME_COLORS.sosGray;
 
-export type TipoBeneficio = "descuento" | "promocion" | "anuncio";
-
-export interface Beneficio {
-  empresa_id: string;
-  titulo: string;
-  descripcion: string;
-  fecha_inicio: string;
-  fecha_fin: string | null;
-  estado_beneficio: string;
-  creado_por: string;
-  tipo_beneficio: TipoBeneficio;
+// Extend BeneficioData to include Appwrite document metadata
+export interface Beneficio extends BeneficioData {
+  $id: string;
+  $createdAt?: string;
+  $updatedAt?: string;
 }
 
 interface BeneficioCardProps {
@@ -62,10 +57,12 @@ const BENEFICIO_STYLE: Record<
 };
 
 export default function BeneficioCard({ beneficio }: BeneficioCardProps) {
-  const config = BENEFICIO_STYLE[beneficio.tipo_beneficio];
+  // Default to "anuncio" if tipo_beneficio is not set
+  const tipoBeneficio = beneficio.tipo_beneficio ?? "anuncio";
+  const config = BENEFICIO_STYLE[tipoBeneficio];
 
   return (
-    <View className="rounded-2xl border border-gray-100 bg-sos-white p-4 shadow-sm">
+    <View className="p-4 border border-gray-100 shadow-sm rounded-2xl bg-sos-white">
       <View className="flex-row items-start gap-3">
         <View className={`h-11 w-11 items-center justify-center rounded-full ${config.iconWrapClass}`}>
           <MaterialIcons name={config.iconName} size={20} color={config.iconColor} />

@@ -7,6 +7,7 @@ import {
     ID,
     Query,
 } from "react-native-appwrite";
+import type { BeneficioData } from "../type";
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -159,7 +160,9 @@ const DRAFT_KEY = "clubSOS.miembro.draft";
  * Load the current miembro draft from AsyncStorage.
  * Returns the parsed object or null if nothing was stored.
  */
-export const loadMiembroDraft = async (): Promise<Record<string, unknown> | null> => {
+export const loadMiembroDraft = async (): Promise<
+    Record<string, unknown> | null
+> => {
     try {
         const raw = await AsyncStorage.getItem(DRAFT_KEY);
         return raw ? JSON.parse(raw) : null;
@@ -240,10 +243,9 @@ export const createMiembro = async (
             // Nullable fields
             documento_identidad: draft.documento_identidad ?? null,
             correo: draft.correo ?? null,
-            titular_miembro_id:
-                parentesco !== "titular" && titularMiembroId
-                    ? titularMiembroId
-                    : null,
+            titular_miembro_id: parentesco !== "titular" && titularMiembroId
+                ? titularMiembroId
+                : null,
 
             // EA fields — populated later by an Appwrite function
             ea_customer_id: null,
@@ -374,47 +376,34 @@ export const findMiembroByCorreo = async (correo: string) => {
 // ─── Beneficios ──────────────────────────────────────────────
 
 /**
- * Reserved empresa_id value that marks a beneficio as visible
- * to all members, regardless of their empresa.
- */
-export const EMPRESA_GENERAL_ID = "GENERAL";
-
-export type EstadoBeneficio = "activo" | "expirado";
-export type TipoBeneficio = "descuento" | "promocion" | "anuncio";
-
-export interface BeneficioData {
-    empresa_id: string[];
-    titulo: string;
-    descripcion: string;
-    fecha_inicio: string;
-    fecha_fin: string | null;
-    estado_beneficio: EstadoBeneficio;
-    creado_por: string;
-    tipo_beneficio: TipoBeneficio | null;
-}
-
-/**
  * Fetch all beneficios visible for a given empresa.
- * Returns documents where empresa_id contains empresaId OR "GENERAL",
- * ordered by fecha_inicio descending.
+ * Returns documents where:
+ *   - empresa_id is an empty array (visible to all)
+ *   - empresa_id contains the specified empresaId
+ * Ordered by fecha_inicio descending.
  *
  * @param empresaId - The empresa $id of the current miembro
  */
 export const getBeneficiosByEmpresa = async (empresaId: string) => {
     try {
+        // Fetch all beneficios ordered by fecha_inicio
         const response = await databases.listDocuments({
             databaseId: appwriteConfig.databaseId!,
             collectionId: appwriteConfig.beneficiosId!,
             queries: [
-                Query.or([
-                    Query.equal("empresa_id", empresaId),
-                    Query.equal("empresa_id", EMPRESA_GENERAL_ID),
-                ]),
                 Query.orderDesc("fecha_inicio"),
             ],
         });
 
-        return response.documents;
+        // Filter client-side:
+        // - Include if empresa_id is empty array (visible to all)
+        // - Include if empresa_id contains our empresaId
+        const filteredDocuments = response.documents.filter((doc) => {
+            const empresaIds = doc.empresa_id as string[];
+            return empresaIds.length === 0 || empresaIds.includes(empresaId);
+        });
+
+        return filteredDocuments;
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(error.message);

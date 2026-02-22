@@ -8,7 +8,7 @@ const SOS_BLUEGREEN = THEME_COLORS.sosBluegreen;
 const SOS_WHITE = THEME_COLORS.sosWhite;
 
 const TAB_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
-  index: "home-filled",
+  inicio: "home-filled",
   citas: "event-note",
   beneficios: "redeem",
   documentos: "folder-open",
@@ -16,7 +16,7 @@ const TAB_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
 };
 
 const TAB_LABELS: Record<string, string> = {
-  index: "Inicio",
+  inicio: "Inicio",
   citas: "Citas",
   beneficios: "Beneficios",
   documentos: "Documentos",
@@ -63,7 +63,7 @@ export default function TabsLayout() {
         tabBarLabel: TAB_LABELS[route.name] ?? route.name,
       })}
     >
-      <Tabs.Screen name="index" />
+      <Tabs.Screen name="inicio" />
       <Tabs.Screen name="citas" />
       <Tabs.Screen name="beneficios" />
       <Tabs.Screen name="documentos" />
