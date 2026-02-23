@@ -91,7 +91,7 @@ export default function HomeTabScreen() {
     useFocusEffect(
         useCallback(() => {
             loadUserData();
-        }, [loadUserData])
+        }, [loadUserData]),
     );
 
     const primerNombre =

@@ -153,7 +153,7 @@ export default function PerfilTabScreen() {
     useFocusEffect(
         useCallback(() => {
             loadUserData();
-        }, [loadUserData])
+        }, [loadUserData]),
     );
 
     const toggleSection = useCallback((key: AccordionKey) => {
