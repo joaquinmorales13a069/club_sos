@@ -43,12 +43,15 @@ export default function HomeTabScreen() {
     const [beneficios, setBeneficios] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
     const scheme = useColorScheme();
     const isDark = scheme === "dark";
 
-    const loadUserData = useCallback(async () => {
+    const loadUserData = useCallback(async (showLoader = true) => {
         try {
-            setLoading(true);
+            if (showLoader) {
+                setLoading(true);
+            }
             setError(null);
 
             // Get current authenticated user
@@ -84,14 +87,21 @@ export default function HomeTabScreen() {
             );
         } finally {
             setLoading(false);
+            setHasLoadedOnce(true);
         }
     }, []);
 
-    // Recargar datos cuando la pantalla recupera el foco
+    // Recargar datos cuando la pantalla recupera el foco (solo si ya se cargó una vez)
     useFocusEffect(
         useCallback(() => {
-            loadUserData();
-        }, [loadUserData]),
+            if (hasLoadedOnce) {
+                // Recargar en segundo plano sin mostrar spinner
+                loadUserData(false);
+            } else {
+                // Primera carga con spinner
+                loadUserData(true);
+            }
+        }, [loadUserData, hasLoadedOnce]),
     );
 
     const primerNombre =
