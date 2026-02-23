@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
     Alert,
     Image,
@@ -7,6 +7,7 @@ import {
     ActivityIndicator,
     useColorScheme,
 } from "react-native";
+import { useFocusEffect } from "expo-router";
 
 import TabScreenView from "@/components/shared/TabScreenView";
 import TabScrollView from "@/components/shared/TabScrollView";
@@ -45,11 +46,7 @@ export default function HomeTabScreen() {
     const scheme = useColorScheme();
     const isDark = scheme === "dark";
 
-    useEffect(() => {
-        loadUserData();
-    }, []);
-
-    const loadUserData = async () => {
+    const loadUserData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -88,7 +85,14 @@ export default function HomeTabScreen() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    // Recargar datos cuando la pantalla recupera el foco
+    useFocusEffect(
+        useCallback(() => {
+            loadUserData();
+        }, [loadUserData])
+    );
 
     const primerNombre =
         miembro?.nombre_completo?.trim().split(/\s+/)[0] ?? "Usuario";

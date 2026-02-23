@@ -1,5 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -105,11 +105,6 @@ export default function PerfilTabScreen() {
     const [notifBeneficios, setNotifBeneficios] = useState(true);
     const [notifGeneral, setNotifGeneral] = useState(false);
 
-    // Cargar datos del usuario al montar (solo una vez)
-    useEffect(() => {
-        loadUserData();
-    }, []);
-
     // Actualizar campos editables cuando los datos del miembro cambian
     useEffect(() => {
         if (miembro) {
@@ -119,7 +114,7 @@ export default function PerfilTabScreen() {
         }
     }, [miembro]);
 
-    const loadUserData = async () => {
+    const loadUserData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -152,7 +147,14 @@ export default function PerfilTabScreen() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    // Recargar datos cuando la pantalla recupera el foco
+    useFocusEffect(
+        useCallback(() => {
+            loadUserData();
+        }, [loadUserData])
+    );
 
     const toggleSection = useCallback((key: AccordionKey) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -170,6 +172,15 @@ export default function PerfilTabScreen() {
                 documento_identidad: documento,
                 correo: correo,
             });
+
+            // Actualizar el estado local del miembro con los nuevos valores
+            setMiembro({
+                ...miembro,
+                nombre_completo: nombre,
+                documento_identidad: documento,
+                correo: correo,
+            });
+
             Alert.alert("Éxito", "Los cambios se han guardado correctamente");
             setLoading(false);
         } catch (err) {

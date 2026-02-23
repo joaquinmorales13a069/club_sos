@@ -34,8 +34,8 @@ const AccordionCard = React.memo(function AccordionCard({
                         ? "#1a2735"
                         : "#f0f7ff"
                     : isDark
-                    ? "#151f2b"
-                    : "#FFFFFF",
+                      ? "#151f2b"
+                      : "#FFFFFF",
                 shadowColor: "#000000",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: isDark ? 0 : 0.06,
