@@ -1,6 +1,6 @@
 import React from "react";
 import { Image, ImageBackground, Text, View } from "react-native";
-import type { BeneficioData, TipoBeneficio } from "../type";
+import type { BeneficioData, TipoBeneficio } from "../../type";
 
 // Extend BeneficioData to include Appwrite document metadata
 export interface Beneficio extends BeneficioData {
@@ -18,16 +18,16 @@ const BENEFICIO_ASSETS: Record<
     { background: number; icon: number }
 > = {
     anuncio: {
-        background: require("../assets/images/ANUNCIO-beneficio.png"),
-        icon: require("../assets/images/ANUNCIO-icono.png"),
+        background: require("../../assets/images/ANUNCIO-beneficio.png"),
+        icon: require("../../assets/images/ANUNCIO-icono.png"),
     },
     descuento: {
-        background: require("../assets/images/DESCUENTO-beneficio.png"),
-        icon: require("../assets/images/DESCUENTO-icono.png"),
+        background: require("../../assets/images/DESCUENTO-beneficio.png"),
+        icon: require("../../assets/images/DESCUENTO-icono.png"),
     },
     promocion: {
-        background: require("../assets/images/PROMOCION-beneficio.png"),
-        icon: require("../assets/images/Promocion-icono.png"),
+        background: require("../../assets/images/PROMOCION-beneficio.png"),
+        icon: require("../../assets/images/Promocion-icono.png"),
     },
 };
 

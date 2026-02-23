@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import TopAppBar from "@/components/TopAppBar";
+import TopAppBar from "@/components/auth/TopAppBar";
 import { account, findMiembroByAuthUserId } from "@/libs/appwrite";
 
 // ─── Storage Keys (read-only) ────────────────────────────────
@@ -127,10 +127,7 @@ export default function AccountActivationScreen() {
 
             // Still pending — no action needed, UI already shows pending state
         } catch (error) {
-            console.error(
-                "[account-activation] Error checking estado:",
-                error,
-            );
+            console.error("[account-activation] Error checking estado:", error);
         } finally {
             setIsRefreshing(false);
         }
@@ -320,9 +317,7 @@ export default function AccountActivationScreen() {
                                 {/* Correo */}
                                 <SummaryRow
                                     label="Correo"
-                                    value={
-                                        draft.correo ?? "No proporcionado"
-                                    }
+                                    value={draft.correo ?? "No proporcionado"}
                                     isPlaceholder={draft.correo === null}
                                     isDark={isDark}
                                 />
@@ -334,9 +329,7 @@ export default function AccountActivationScreen() {
                                         value="Empleado vinculado correctamente"
                                         isDark={isDark}
                                         icon={
-                                            hasTitular
-                                                ? "check-circle"
-                                                : "link"
+                                            hasTitular ? "check-circle" : "link"
                                         }
                                         iconColor={
                                             hasTitular
@@ -351,10 +344,7 @@ export default function AccountActivationScreen() {
                 )}
 
                 {/* ── Actions ─────────────────────────────────────── */}
-                <View
-                    className="px-6 mt-8 items-center"
-                    style={{ gap: 16 }}
-                >
+                <View className="px-6 mt-8 items-center" style={{ gap: 16 }}>
                     {/* Actualizar estado — outline/ghost button */}
                     <Pressable
                         accessibilityRole="button"

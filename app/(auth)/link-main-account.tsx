@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import TopAppBar from "@/components/TopAppBar";
-import TitularFoundCard from "@/components/TitularFoundCard";
+import TopAppBar from "@/components/auth/TopAppBar";
+import TitularFoundCard from "@/components/auth/TitularFoundCard";
 import { findTitular } from "@/libs/appwrite";
 
 // ─── Storage Keys ───────────────────────────────────────────
@@ -27,7 +27,6 @@ const TITULAR_SNAPSHOT_KEY = "clubSOS.miembro.titular_snapshot";
 // Brand colour constants for inline style props (RN icon / shadow limitation)
 const SOS_BLUEGREEN = "#0066CC";
 const SOS_RED = "#CC3333";
-
 
 // ─── Progress Config ────────────────────────────────────────
 // Onboarding flow: 1 = verify-company, 2 = verify-account-type, 3 = link-main-account
@@ -91,7 +90,10 @@ export default function LinkMainAccountScreen() {
     const handleSearch = async () => {
         const name = employeeName.trim();
         // Strip spaces, dashes and symbols — keep only alphanumeric chars
-        const doc = employeeDocument.trim().replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+        const doc = employeeDocument
+            .trim()
+            .replace(/[^A-Za-z0-9]/g, "")
+            .toUpperCase();
 
         if (!name || !doc) {
             setErrorMessage("Por favor completa ambos campos.");
@@ -359,7 +361,8 @@ export default function LinkMainAccountScreen() {
                     onPress={handleConfirm}
                     disabled={!foundEmployee}
                     className={`w-full flex-row items-center justify-center rounded-full h-14 bg-sos-bluegreen active:opacity-90 ${
-                        !foundEmployee ? "opacity-50" : ""}`}
+                        !foundEmployee ? "opacity-50" : ""
+                    }`}
                     style={{
                         shadowColor: SOS_BLUEGREEN,
                         shadowOffset: { width: 0, height: 4 },

@@ -8,13 +8,13 @@ import {
     useColorScheme,
 } from "react-native";
 
-import TabScreenView from "@/components/TabScreenView";
-import TabScrollView from "@/components/TabScrollView";
+import TabScreenView from "@/components/shared/TabScreenView";
+import TabScrollView from "@/components/shared/TabScrollView";
 
-import BeneficioCard, { type Beneficio } from "@/components/BeneficioCard";
-import CitaCard, { type Cita } from "@/components/CitaCard";
-import MembresiaCard from "@/components/MembresiaCard";
-import SupportButton from "@/components/SupportButton";
+import BeneficioCard from "@/components/beneficios/BeneficioCard";
+import CitaCard, { type Cita } from "@/components/citas/CitaCard";
+import MembresiaCard from "@/components/inicio/MembresiaCard";
+import SupportButton from "@/components/inicio/SupportButton";
 
 import {
     getCurrentUser,

@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { Pressable, Text, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import TopAppBar from "@/components/TopAppBar";
+import TopAppBar from "@/components/auth/TopAppBar";
 
 // ─── Constants ─────────────────────────────────────────────
 // Storage key — follows the same AsyncStorage pattern used in verify-company
@@ -74,8 +74,7 @@ export default function VerifyAccountTypeScreen() {
     const isDark = scheme === "dark";
 
     // ─── State ─────────────────────────────────────────────
-    const [selectedType, setSelectedType] =
-        useState<ParentescoType>("titular");
+    const [selectedType, setSelectedType] = useState<ParentescoType>("titular");
 
     // ─── Handlers ──────────────────────────────────────────
 
@@ -123,8 +122,8 @@ export default function VerifyAccountTypeScreen() {
 
                 {/* Description */}
                 <Text className="mb-8 font-sans text-base leading-relaxed text-sos-gray dark:text-gray-400">
-                    Selecciona tu relación con algun trabajador de la empresa para configurar tu
-                    perfil correctamente.
+                    Selecciona tu relación con algun trabajador de la empresa
+                    para configurar tu perfil correctamente.
                 </Text>
 
                 {/* ── Selection Cards (radio group) ──────────────── */}

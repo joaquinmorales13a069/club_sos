@@ -502,3 +502,5 @@ export const deleteBeneficio = async (id: string) => {
         throw new Error("Error al eliminar el beneficio");
     }
 };
+
+// ─── Perfil ──────────────────────────────────────────────
