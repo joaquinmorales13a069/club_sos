@@ -7,6 +7,7 @@ const SOS_RED = "#CC3333";
 
 const PerfilCerrarSesion = React.memo(function PerfilCerrarSesion({
     isDark,
+    onPress,
 }: CerrarSesionContentProps) {
     return (
         <View className="pt-4" style={{ gap: 16 }}>
@@ -16,6 +17,7 @@ const PerfilCerrarSesion = React.memo(function PerfilCerrarSesion({
             </Text>
 
             <Pressable
+                onPress={onPress}
                 accessibilityRole="button"
                 accessibilityLabel="Cerrar sesión"
                 className="flex-row items-center justify-center w-full h-12 rounded-full active:opacity-90"

@@ -503,4 +503,60 @@ export const deleteBeneficio = async (id: string) => {
     }
 };
 
+// ─── Session Management ──────────────────────────────────
+
+/**
+ * Delete the current Appwrite session and clear all local storage.
+ * This logs out the user completely.
+ *
+ * @returns Promise<void>
+ */
+export const deleteSession = async (): Promise<void> => {
+    try {
+        // Delete the current session from Appwrite
+        await account.deleteSession("current");
+
+        // Clear all relevant AsyncStorage keys
+        await Promise.all([
+            AsyncStorage.removeItem(PHONE_KEY),
+            AsyncStorage.removeItem(DRAFT_KEY),
+            AsyncStorage.removeItem("clubSOS.empresa_id"),
+            AsyncStorage.removeItem("clubSOS.miembro.parentesco"),
+            AsyncStorage.removeItem("clubSOS.miembro.titular_miembro_id"),
+        ]);
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al cerrar la sesión");
+    }
+};
+
 // ─── Perfil ──────────────────────────────────────────────
+
+/**
+ * Actualiza los datos de un miembro en la base de datos.
+ * @param miembroId - El $id del documento del miembro
+ * @param data - Los campos a actualizar
+ * @returns El documento actualizado
+ */
+export const updateMiembro = async (
+    miembroId: string,
+    data: Record<string, unknown>,
+) => {
+    try {
+        const document = await databases.updateDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.miembrosId!,
+            miembroId,
+            data,
+        );
+
+        return document;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al actualizar el miembro");
+    }
+};

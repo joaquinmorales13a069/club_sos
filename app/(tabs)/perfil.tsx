@@ -1,14 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React, {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-    memo,
-} from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-    Animated,
     ActivityIndicator,
     Alert,
     Image,
@@ -16,7 +9,6 @@ import {
     Platform,
     Pressable,
     Text,
-    TextInput,
     UIManager,
     useColorScheme,
     View,
@@ -32,10 +24,12 @@ import {
     getCurrentUser,
     findMiembroByAuthUserId,
     getEmpresaById,
+    deleteSession,
+    updateMiembro,
 } from "@/libs/appwrite";
 import type { AccordionKey, AccordionSection } from "@/type";
 
-// Enable LayoutAnimation on Android
+// Habilitar LayoutAnimation en Android
 if (
     Platform.OS === "android" &&
     UIManager.setLayoutAnimationEnabledExperimental
@@ -43,7 +37,7 @@ if (
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// Brand colour constants for inline style props
+// Constantes de colores de marca para props de estilo en línea
 const SOS_RED = "#CC3333";
 const SOS_BLUEGREEN = "#0066CC";
 
@@ -90,32 +84,33 @@ const SECTIONS: AccordionSection[] = [
 export default function PerfilTabScreen() {
     const scheme = useColorScheme();
     const isDark = scheme === "dark";
+    const router = useRouter();
 
     const [expandedKey, setExpandedKey] = useState<AccordionKey | null>(null);
 
-    // Member data state
+    // Estado de datos del miembro
     const [miembro, setMiembro] = useState<any>(null);
     const [empresa, setEmpresa] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Editable fields state
+    // Estado de campos editables
     const [nombre, setNombre] = useState("");
     const [documento, setDocumento] = useState("");
     const [correo, setCorreo] = useState("");
     const [telefono] = useState("");
 
-    // Notification toggles
+    // Alternancias de notificaciones
     const [notifCitas, setNotifCitas] = useState(true);
     const [notifBeneficios, setNotifBeneficios] = useState(true);
     const [notifGeneral, setNotifGeneral] = useState(false);
 
-    // Load user data on mount (only once)
+    // Cargar datos del usuario al montar (solo una vez)
     useEffect(() => {
         loadUserData();
     }, []);
 
-    // Update editable fields when miembro data changes
+    // Actualizar campos editables cuando los datos del miembro cambian
     useEffect(() => {
         if (miembro) {
             setNombre(miembro.nombre_completo || "");
@@ -164,6 +159,62 @@ export default function PerfilTabScreen() {
         setExpandedKey((prev) => (prev === key ? null : key));
     }, []);
 
+    // Manejar guardar cambios de datos personales
+    const handleGuardarCambios = useCallback(async () => {
+        if (!miembro) return;
+
+        try {
+            setLoading(true);
+            await updateMiembro(miembro.$id, {
+                nombre_completo: nombre,
+                documento_identidad: documento,
+                correo: correo,
+            });
+            Alert.alert("Éxito", "Los cambios se han guardado correctamente");
+            setLoading(false);
+        } catch (err) {
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : "Error al guardar los cambios";
+            Alert.alert("Error", message);
+            setLoading(false);
+        }
+    }, [miembro, nombre, documento, correo]);
+
+    const handleCerrarSesion = useCallback(async () => {
+        Alert.alert(
+            "Confirmar cierre de sesión",
+            "¿Estás seguro de que deseas cerrar sesión?",
+            [
+                {
+                    text: "Cancelar",
+                    onPress: () => {},
+                    style: "cancel",
+                },
+                {
+                    text: "Cerrar sesión",
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            await deleteSession();
+                            // Redirigir a la pantalla de inicio de sesión
+                            router.replace("/(auth)/login-phone");
+                        } catch (err) {
+                            const message =
+                                err instanceof Error
+                                    ? err.message
+                                    : "Error al cerrar sesión";
+                            Alert.alert("Error", message);
+                            setLoading(false);
+                        }
+                    },
+                    style: "destructive",
+                },
+            ],
+        );
+    }, [router]);
+
     const formatDate = (isoString: string): string => {
         try {
             const date = new Date(isoString);
@@ -177,7 +228,7 @@ export default function PerfilTabScreen() {
         }
     };
 
-    // Loading state
+    // Estado de carga
     if (loading) {
         return (
             <TabScreenView className="flex-1 items-center justify-center bg-sos-white dark:bg-[#101822]">
@@ -193,7 +244,7 @@ export default function PerfilTabScreen() {
         );
     }
 
-    // Error state
+    // Estado de error
     if (error || !miembro) {
         return (
             <TabScreenView className="flex-1 items-center justify-center bg-sos-white dark:bg-[#101822] px-6">
@@ -218,7 +269,7 @@ export default function PerfilTabScreen() {
         );
     }
 
-    // Main render
+    // Renderizado principal
     return (
         <TabScreenView className="flex-1 bg-sos-white dark:bg-[#101822]">
             <TabScrollView
@@ -226,8 +277,9 @@ export default function PerfilTabScreen() {
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* Header / Avatar */}
+                {/* Encabezado / Avatar */}
                 <View className="items-center px-6 pt-6 pb-2">
+                    {/* Avatar del usuario */}
                     <View
                         className="items-center justify-center w-20 h-20 mb-3 rounded-full"
                         style={{
@@ -278,7 +330,7 @@ export default function PerfilTabScreen() {
                     </View>
                 </View>
 
-                {/* Accordion Sections */}
+                {/* Secciones de acordeón */}
                 <View className="px-4 mt-6" style={{ gap: 12 }}>
                     {SECTIONS.map((section) => (
                         <AccordionCard
@@ -302,6 +354,7 @@ export default function PerfilTabScreen() {
                                     fechaNacimiento={formatDate(
                                         miembro.fecha_nacimiento || "",
                                     )}
+                                    onGuardar={handleGuardarCambios}
                                 />
                             )}
                             {section.key === "notificaciones" && (
@@ -319,13 +372,16 @@ export default function PerfilTabScreen() {
                                 <PerfilParientes isDark={isDark} />
                             )}
                             {section.key === "cerrar_sesion" && (
-                                <PerfilCerrarSesion isDark={isDark} />
+                                <PerfilCerrarSesion
+                                    isDark={isDark}
+                                    onPress={handleCerrarSesion}
+                                />
                             )}
                         </AccordionCard>
                     ))}
                 </View>
 
-                {/* App version */}
+                {/* Versión de la aplicación */}
                 <View className="items-center px-6 mt-8">
                     <Text className="font-sans text-xs text-sos-gray dark:text-gray-500">
                         ClubSOS v1.0.0

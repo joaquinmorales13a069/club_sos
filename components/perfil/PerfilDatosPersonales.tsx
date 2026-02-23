@@ -18,6 +18,7 @@ const PerfilDatosPersonales = React.memo(function PerfilDatosPersonales({
     telefono,
     sexo,
     fechaNacimiento,
+    onGuardar,
 }: DatosPersonalesProps) {
     return (
         <View className="pt-4" style={{ gap: 16 }}>
@@ -111,6 +112,7 @@ const PerfilDatosPersonales = React.memo(function PerfilDatosPersonales({
             />
 
             <Pressable
+                onPress={onGuardar}
                 accessibilityRole="button"
                 accessibilityLabel="Guardar cambios"
                 className="flex-row items-center justify-center w-full h-12 mt-2 rounded-full bg-sos-bluegreen active:opacity-90"

@@ -81,6 +81,7 @@ export interface DatosPersonalesProps {
     telefono: string;
     sexo: string;
     fechaNacimiento: string;
+    onGuardar?: () => void;
 }
 
 export interface ToggleRowProps {
@@ -108,4 +109,5 @@ export interface ParientesContentProps {
 
 export interface CerrarSesionContentProps {
     isDark: boolean;
+    onPress?: () => void;
 }
