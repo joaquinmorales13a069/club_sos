@@ -20,6 +20,7 @@ import {
     getCurrentUser,
     findMiembroByAuthUserId,
     getBeneficiosByEmpresa,
+    getEmpresaById,
 } from "@/libs/appwrite";
 import { THEME_COLORS } from "@/libs/themeColors";
 
@@ -66,8 +67,12 @@ export default function HomeTabScreen() {
             }
             setMiembro(miembroDoc);
 
-            // Get beneficios for this empresa
+            // Get empresa document if empresa_id exists
             if (miembroDoc.empresa_id) {
+                const empresaDoc = await getEmpresaById(miembroDoc.empresa_id);
+                setEmpresa(empresaDoc);
+
+                // Get beneficios for this empresa
                 const beneficiosData = await getBeneficiosByEmpresa(
                     miembroDoc.empresa_id,
                 );
@@ -154,7 +159,7 @@ export default function HomeTabScreen() {
                             : "Membresía pendiente de activación"
                     }
                     empresaNombre={empresa?.nombre_empresa ?? "ClubSOS"}
-                    afiliadoNombre={miembro?.nombre_completo ?? ""}
+                    afiliadoNombre={miembro?.nombre_completo ?? "Usuario"}
                 />
 
                 <View className="mt-7">

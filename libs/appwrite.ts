@@ -1,11 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-    Account,
-    Client,
-    Databases,
-    ID,
-    Query,
-} from "react-native-appwrite";
+import { Account, Client, Databases, ID, Query } from "react-native-appwrite";
 import type { BeneficioData } from "../type";
 
 export const appwriteConfig = {
@@ -28,7 +22,6 @@ client
 
 export const account = new Account(client);
 export const databases = new Databases(client);
-
 
 /**
  * Send OTP via SMS to the specified phone number
@@ -296,6 +289,30 @@ export const findEmpresaByCodigo = async (codigoEmpresa: string) => {
             throw new Error(error.message);
         }
         throw new Error("Error al buscar la empresa");
+    }
+};
+
+/**
+ * Get a company document by its unique ID.
+ * Returns the empresa document, or null if not found.
+ *
+ * @param empresaId - The empresa document $id
+ * @returns The empresa document or null
+ */
+export const getEmpresaById = async (empresaId: string) => {
+    try {
+        const document = await databases.getDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.empresasId!,
+            empresaId,
+        );
+
+        return document;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener la empresa");
     }
 };
 
