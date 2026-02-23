@@ -45,3 +45,11 @@ app-example
 #env
 .env
 .env.local
+
+# IDEs
+.vscode/
+.idea/
+.cursor/
+
+# IA folder
+.claude

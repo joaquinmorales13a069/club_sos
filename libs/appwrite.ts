@@ -1,12 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-    Account,
-    Avatars,
-    Client,
-    Databases,
-    ID,
-    Query,
-} from "react-native-appwrite";
+import { Account, Client, Databases, ID, Query } from "react-native-appwrite";
+import type { BeneficioData } from "../type";
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -15,6 +9,7 @@ export const appwriteConfig = {
     databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID,
     miembrosId: process.env.EXPO_PUBLIC_APPWRITE_MIEMBROS_ID,
     empresasId: process.env.EXPO_PUBLIC_APPWRITE_EMPRESAS_ID,
+    beneficiosId: process.env.EXPO_PUBLIC_APPWRITE_BENEFICIOS_ID,
 };
 
 export const client = new Client();
@@ -27,19 +22,6 @@ client
 
 export const account = new Account(client);
 export const databases = new Databases(client);
-const avatars = new Avatars(client);
-
-/**
- * Delete any active session so a new one can be created.
- * Silently ignores errors (e.g. when no session exists).
- */
-const deleteExistingSession = async () => {
-    try {
-        await account.deleteSession("current");
-    } catch {
-        // No active session – nothing to delete
-    }
-};
 
 /**
  * Send OTP via SMS to the specified phone number
@@ -48,9 +30,6 @@ const deleteExistingSession = async () => {
  */
 export const sendPhoneOtp = async (phoneE164: string) => {
     try {
-        // Clear any lingering session before starting a new auth flow
-        await deleteExistingSession();
-
         // Create a phone token for SMS OTP verification
         // This triggers Appwrite to send an SMS with the verification code
         const token = await account.createPhoneToken(ID.unique(), phoneE164);
@@ -76,9 +55,6 @@ export const sendPhoneOtp = async (phoneE164: string) => {
  */
 export const verifyPhoneOtp = async (userId: string, otp: string) => {
     try {
-        // Clear any stale session that might block creating the new one
-        await deleteExistingSession();
-
         const session = await account.createSession(userId, otp);
 
         if (!session) {
@@ -176,7 +152,9 @@ const DRAFT_KEY = "clubSOS.miembro.draft";
  * Load the current miembro draft from AsyncStorage.
  * Returns the parsed object or null if nothing was stored.
  */
-export const loadMiembroDraft = async (): Promise<Record<string, unknown> | null> => {
+export const loadMiembroDraft = async (): Promise<
+    Record<string, unknown> | null
+> => {
     try {
         const raw = await AsyncStorage.getItem(DRAFT_KEY);
         return raw ? JSON.parse(raw) : null;
@@ -257,10 +235,9 @@ export const createMiembro = async (
             // Nullable fields
             documento_identidad: draft.documento_identidad ?? null,
             correo: draft.correo ?? null,
-            titular_miembro_id:
-                parentesco !== "titular" && titularMiembroId
-                    ? titularMiembroId
-                    : null,
+            titular_miembro_id: parentesco !== "titular" && titularMiembroId
+                ? titularMiembroId
+                : null,
 
             // EA fields — populated later by an Appwrite function
             ea_customer_id: null,
@@ -316,6 +293,30 @@ export const findEmpresaByCodigo = async (codigoEmpresa: string) => {
 };
 
 /**
+ * Get a company document by its unique ID.
+ * Returns the empresa document, or null if not found.
+ *
+ * @param empresaId - The empresa document $id
+ * @returns The empresa document or null
+ */
+export const getEmpresaById = async (empresaId: string) => {
+    try {
+        const document = await databases.getDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.empresasId!,
+            empresaId,
+        );
+
+        return document;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener la empresa");
+    }
+};
+
+/**
  * Look up a miembro document by the current Appwrite Auth user ID.
  * Returns the first matching document, or null if none found.
  *
@@ -340,6 +341,18 @@ export const findMiembroByAuthUserId = async (authUserId: string) => {
             throw new Error(error.message);
         }
         throw new Error("Error al buscar el miembro");
+    }
+};
+
+/**
+ * Returns the current Appwrite Auth user if an active session exists,
+ * or null if the user is not authenticated.
+ */
+export const getCurrentUser = async () => {
+    try {
+        return await account.get();
+    } catch {
+        return null;
     }
 };
 
@@ -373,5 +386,119 @@ export const findMiembroByCorreo = async (correo: string) => {
             throw new Error(error.message);
         }
         throw new Error("Error al validar el correo del miembro");
+    }
+};
+
+// ─── Beneficios ──────────────────────────────────────────────
+
+/**
+ * Fetch all beneficios visible for a given empresa.
+ * Returns documents where:
+ *   - empresa_id is an empty array (visible to all)
+ *   - empresa_id contains the specified empresaId
+ * Ordered by fecha_inicio descending.
+ *
+ * @param empresaId - The empresa $id of the current miembro
+ */
+export const getBeneficiosByEmpresa = async (empresaId: string) => {
+    try {
+        // Fetch all beneficios ordered by fecha_inicio
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.beneficiosId!,
+            queries: [
+                Query.orderDesc("fecha_inicio"),
+            ],
+        });
+
+        // Filter client-side:
+        // - Include if empresa_id is empty array (visible to all)
+        // - Include if empresa_id contains our empresaId
+        const filteredDocuments = response.documents.filter((doc) => {
+            const empresaIds = doc.empresa_id as string[];
+            return empresaIds.length === 0 || empresaIds.includes(empresaId);
+        });
+
+        return filteredDocuments;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener los beneficios");
+    }
+};
+
+/**
+ * Create a new beneficio document.
+ * Should only be called by users with rol === "admin".
+ *
+ * @param data - The beneficio fields to create
+ * @returns The created Appwrite document
+ */
+export const createBeneficio = async (data: BeneficioData) => {
+    try {
+        const document = await databases.createDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.beneficiosId!,
+            ID.unique(),
+            data,
+        );
+
+        return document;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al crear el beneficio");
+    }
+};
+
+/**
+ * Update an existing beneficio document.
+ * Should only be called by users with rol === "admin".
+ *
+ * @param id   - The $id of the beneficio document to update
+ * @param data - Partial beneficio fields to update (creado_por is immutable)
+ * @returns The updated Appwrite document
+ */
+export const updateBeneficio = async (
+    id: string,
+    data: Partial<Omit<BeneficioData, "creado_por">>,
+) => {
+    try {
+        const document = await databases.updateDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.beneficiosId!,
+            id,
+            data,
+        );
+
+        return document;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al actualizar el beneficio");
+    }
+};
+
+/**
+ * Delete a beneficio document.
+ * Should only be called by users with rol === "admin".
+ *
+ * @param id - The $id of the beneficio document to delete
+ */
+export const deleteBeneficio = async (id: string) => {
+    try {
+        await databases.deleteDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.beneficiosId!,
+            id,
+        );
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al eliminar el beneficio");
     }
 };
