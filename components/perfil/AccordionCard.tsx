@@ -27,8 +27,15 @@ const AccordionCard = React.memo(function AccordionCard({
 
     return (
         <View
-            className="rounded-2xl bg-sos-white dark:bg-[#151f2b] overflow-hidden"
+            className="rounded-2xl overflow-hidden"
             style={{
+                backgroundColor: isExpanded
+                    ? isDark
+                        ? "#1a2735"
+                        : "#f0f7ff"
+                    : isDark
+                    ? "#151f2b"
+                    : "#FFFFFF",
                 shadowColor: "#000000",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: isDark ? 0 : 0.06,
@@ -64,10 +71,10 @@ const AccordionCard = React.memo(function AccordionCard({
                 </View>
 
                 <View className="flex-1">
-                    <Text className="text-base text-gray-900 font-poppins-semibold dark:text-sos-white">
+                    <Text className="text-lg text-gray-900 font-poppins-semibold dark:text-sos-white">
                         {section.title}
                     </Text>
-                    <Text className="text-xs font-sans text-sos-gray dark:text-gray-400 mt-0.5">
+                    <Text className="text-sm font-sans text-sos-gray dark:text-gray-400 mt-0.5">
                         {section.subtitle}
                     </Text>
                 </View>
