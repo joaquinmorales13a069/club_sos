@@ -105,6 +105,10 @@ export interface NotificacionesProps {
 
 export interface ParientesContentProps {
     isDark: boolean;
+    parientes: any[];
+    loadingParientes: boolean;
+    onToggleActivo: (parienteId: string, currentActivo: boolean) => void;
+    togglingId: string | null;
 }
 
 export interface CerrarSesionContentProps {

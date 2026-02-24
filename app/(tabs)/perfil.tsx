@@ -26,6 +26,7 @@ import {
     getEmpresaById,
     deleteSession,
     updateMiembro,
+    getParientesByTitularId,
 } from "@/libs/appwrite";
 import type { AccordionKey, AccordionSection } from "@/type";
 
@@ -106,6 +107,11 @@ export default function PerfilTabScreen() {
     const [notifBeneficios, setNotifBeneficios] = useState(true);
     const [notifGeneral, setNotifGeneral] = useState(false);
 
+    // Estado de parientes
+    const [parientes, setParientes] = useState<any[]>([]);
+    const [loadingParientes, setLoadingParientes] = useState(false);
+    const [togglingId, setTogglingId] = useState<string | null>(null);
+
     // Actualizar campos editables cuando los datos del miembro cambian
     useEffect(() => {
         if (miembro) {
@@ -141,6 +147,21 @@ export default function PerfilTabScreen() {
                     miembroData.empresa_id,
                 );
                 setEmpresa(empresaData);
+            }
+
+            // Si es titular, cargar parientes
+            if (miembroData.parentesco === "titular") {
+                setLoadingParientes(true);
+                try {
+                    const parientesData = await getParientesByTitularId(
+                        miembroData.$id,
+                    );
+                    setParientes(parientesData);
+                } catch {
+                    setParientes([]);
+                } finally {
+                    setLoadingParientes(false);
+                }
             }
         } catch (err) {
             const message =
@@ -202,6 +223,34 @@ export default function PerfilTabScreen() {
             setLoading(false);
         }
     }, [miembro, nombre, documento, correo]);
+
+    // Manejar activar/desactivar pariente
+    const handleToggleActivo = useCallback(
+        async (parienteId: string, currentActivo: boolean) => {
+            try {
+                setTogglingId(parienteId);
+                await updateMiembro(parienteId, {
+                    activo: !currentActivo,
+                });
+                // Recargar la lista de parientes
+                if (miembro) {
+                    const parientesData = await getParientesByTitularId(
+                        miembro.$id,
+                    );
+                    setParientes(parientesData);
+                }
+            } catch (err) {
+                const message =
+                    err instanceof Error
+                        ? err.message
+                        : "Error al actualizar el estado del pariente";
+                Alert.alert("Error", message);
+            } finally {
+                setTogglingId(null);
+            }
+        },
+        [miembro],
+    );
 
     const handleCerrarSesion = useCallback(async () => {
         Alert.alert(
@@ -353,7 +402,11 @@ export default function PerfilTabScreen() {
 
                 {/* Secciones de acordeón */}
                 <View className="px-4 mt-6" style={{ gap: 12 }}>
-                    {SECTIONS.map((section) => (
+                    {SECTIONS.filter((section) =>
+                        section.key === "parientes"
+                            ? miembro.parentesco === "titular"
+                            : true,
+                    ).map((section) => (
                         <AccordionCard
                             key={section.key}
                             section={section}
@@ -390,7 +443,13 @@ export default function PerfilTabScreen() {
                                 />
                             )}
                             {section.key === "parientes" && (
-                                <PerfilParientes isDark={isDark} />
+                                <PerfilParientes
+                                    isDark={isDark}
+                                    parientes={parientes}
+                                    loadingParientes={loadingParientes}
+                                    onToggleActivo={handleToggleActivo}
+                                    togglingId={togglingId}
+                                />
                             )}
                             {section.key === "cerrar_sesion" && (
                                 <PerfilCerrarSesion

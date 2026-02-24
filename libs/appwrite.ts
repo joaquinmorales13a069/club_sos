@@ -532,6 +532,35 @@ export const deleteSession = async (): Promise<void> => {
     }
 };
 
+// ─── Parientes ───────────────────────────────────────────
+
+/**
+ * Fetch all parientes linked to a titular member.
+ * Queries the `miembros` collection filtering by titular_miembro_id.
+ *
+ * @param titularId - The $id of the titular miembro document
+ * @returns Array of pariente documents
+ */
+export const getParientesByTitularId = async (titularId: string) => {
+    try {
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.miembrosId!,
+            queries: [
+                Query.equal("titular_miembro_id", titularId),
+                Query.orderDesc("$createdAt"),
+            ],
+        });
+
+        return response.documents;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener los parientes");
+    }
+};
+
 // ─── Perfil ──────────────────────────────────────────────
 
 /**
