@@ -1,101 +1,63 @@
-import { MaterialIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { type Href, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   Image,
   ImageBackground,
   Modal,
   Pressable,
   Text,
-  useColorScheme,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const HERO_IMAGE_URI =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDzqPypHKvouCo50B9GM0oKcMqmQjUsf4owQqlC3P1KgnzgDLLLu7D2da1JdqbxLncXSOGYo1IyUVzHnEwUEFZ3zrb4w0H-HUJ_LhUNq5eQ4iS2v9hGnX1flAySVASqp_23SS3OjMsjF4cTq0mCUSqErzJAkj0iKZsNwcCkBTY2_aAvf_I6kIsPD7wQWOak3Mw8tBSdPVzWtE3oFC-PBgeQqx8AI1eGigmZfsxKgo1bHL8JftI3m-6a9mC3mVuW-7czGJ657vssHWFM';
-
-const COLORS = {
-  red: "#CC3333",
-  gray: "#666666",
-  white: "#FFFFFF",
-  bluegreen: "#0066CC",
-} as const;
 const LOGIN_ROUTE = "/(auth)/login-phone" as Href;
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
   const [supportOpen, setSupportOpen] = useState(false);
-
-  const gradientColors = useMemo(() => {
-    // Match: "bg-gradient-to-t from-black/60 to-transparent"
-    // In dark mode, slightly stronger bottom to keep contrast.
-    const from =
-      scheme === "dark" ? "rgba(0,0,0,0.72)" : "rgba(0,0,0,0.60)";
-    return [from, "rgba(0,0,0,0.0)"] as const;
-  }, [scheme]);
 
   return (
     <SafeAreaView className="flex-1 bg-sos-white">
       <View className="flex-1">
         {/* Header: Logo */}
-        <View className="justify-center items-center pt-10 pb-6">
+        <View className="items-center justify-center pt-6 pb-4">
           <Image
-            source={require("../../assets/images/LOGO-clubSOS.png")}
+            source={require("../../assets/images/Logo-ClubSOS.webp")}
             accessibilityLabel="Logo de ClubSOS Medical"
             resizeMode="contain"
-            className="h-20 w-72"
+            className="h-28 w-80"
           />
         </View>
 
-        {/* Main Content: Hero */}
-        <View className="px-4">
-          <View className="mx-auto w-full max-w-[480px]">
-            <View className="overflow-hidden mt-2 mb-4 rounded-xl shadow-sm bg-sos-white">
+        {/* Main Content: Hero with title overlay */}
+        <View className="flex-1 px-4">
+          <View className="flex-1 mx-auto w-full max-w-[480px]">
+            <View className="flex-1 overflow-hidden shadow-sm rounded-xl bg-sos-white">
               <ImageBackground
-                source={{ uri: HERO_IMAGE_URI }}
-                className="h-[360px] w-full bg-sos-white"
+                source={require("../../assets/images/Bienvenida-imagen.webp")}
+                className="flex-1 w-full bg-sos-white"
                 imageStyle={{ resizeMode: "cover" }}
-                accessibilityLabel="Familia feliz disfrutando un estilo de vida saludable al aire libre"
+                accessibilityLabel="Médico dando la mano a un paciente"
                 accessible
               >
-                <LinearGradient
-                  colors={gradientColors}
-                  start={{ x: 0.5, y: 1 }}
-                  end={{ x: 0.5, y: 0 }}
-                  className="flex-1"
-                />
               </ImageBackground>
             </View>
           </View>
         </View>
 
-        {/* Bottom Action Area */}
-        <View className="items-center pt-2">
-          <View className="mx-auto w-full max-w-[480px]">
-            <Text className="px-6 pb-6 text-center text-[28px] leading-tight tracking-tight text-sos-bluegreen font-poppins-bold">
-              Tu club de salud {"\n"}y beneficios
-            </Text>
-          </View>
-        </View>
-
         {/* Actions at screen bottom */}
-        <View className="items-center pb-6 mt-auto">
+        <View className="items-center pt-4 pb-6">
           <View className="mx-auto w-full max-w-[480px]">
             <View className="px-4">
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Continuar"
                 onPress={() => router.push(LOGIN_ROUTE)}
-                className="overflow-hidden justify-center items-center w-full h-14 rounded-xl bg-sos-bluegreen"
+                className="items-center justify-center w-full overflow-hidden h-14 rounded-xl bg-sos-red"
               >
-                <View className="flex-row gap-2 items-center">
-                  <Text className="text-lg leading-normal tracking-[0.015em] text-sos-white font-poppins-bold">
-                    Continuar
-                  </Text>
-                </View>
+                <Text className="text-lg leading-normal tracking-[0.015em] text-sos-white font-poppins-bold">
+                  Continuar
+                </Text>
               </Pressable>
             </View>
 
@@ -103,14 +65,14 @@ export default function WelcomeScreen() {
               accessibilityRole="button"
               accessibilityLabel="Soporte / Ayuda"
               onPress={() => setSupportOpen(true)}
-              className="flex-row gap-2 justify-center items-center px-4 py-2 mt-2 rounded-lg"
+              className="flex-row items-center justify-center gap-2 px-4 py-2 mt-2 rounded-lg"
             >
-              <MaterialIcons
-                name="help-outline"
-                size={18}
-                color={COLORS.gray}
+              <Image
+                source={require("../../assets/images/ICON-soporte.webp")}
+                className="w-5 h-5"
+                resizeMode="contain"
               />
-              <Text className="text-sm leading-normal underline text-sos-gray font-poppins-medium">
+              <Text className="text-sm leading-normal text-sos-gray font-poppins-medium">
                 Soporte / Ayuda
               </Text>
             </Pressable>
@@ -118,14 +80,14 @@ export default function WelcomeScreen() {
         </View>
       </View>
 
-      {/* Support / Help modal (simple + listo) */}
+      {/* Support / Help modal */}
       <Modal
         animationType="fade"
         transparent
         visible={supportOpen}
         onRequestClose={() => setSupportOpen(false)}
       >
-        <View className="flex-1 justify-center items-center px-6 bg-black/50">
+        <View className="items-center justify-center flex-1 px-6 bg-black/50">
           <View className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-sos-white">
             <View className="px-5 pt-5 pb-4">
               <Text className="text-lg text-sos-bluegreen font-poppins-bold">
@@ -136,12 +98,12 @@ export default function WelcomeScreen() {
                 revisa las preguntas frecuentes.
               </Text>
             </View>
-            <View className="flex-row gap-2 justify-end px-5 pb-5">
+            <View className="flex-row justify-end gap-2 px-5 pb-5">
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Cerrar soporte"
                 onPress={() => setSupportOpen(false)}
-                className="justify-center items-center px-4 h-11 rounded-xl bg-sos-bluegreen"
+                className="items-center justify-center px-4 h-11 rounded-xl bg-sos-bluegreen"
               >
                 <Text className="text-sm text-sos-white font-poppins-semibold">
                   Cerrar
@@ -154,4 +116,3 @@ export default function WelcomeScreen() {
     </SafeAreaView>
   );
 }
-
