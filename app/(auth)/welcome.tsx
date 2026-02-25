@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import SOSButton from "@/components/shared/SOSButton";
+
 const LOGIN_ROUTE = "/(auth)/login-phone" as Href;
 
 export default function WelcomeScreen() {
@@ -49,16 +51,10 @@ export default function WelcomeScreen() {
         <View className="items-center pt-4 pb-6">
           <View className="mx-auto w-full max-w-[480px]">
             <View className="px-4">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Continuar"
+              <SOSButton
+                label="Continuar"
                 onPress={() => router.push(LOGIN_ROUTE)}
-                className="items-center justify-center w-full overflow-hidden h-14 rounded-xl bg-sos-red"
-              >
-                <Text className="text-lg leading-normal tracking-[0.015em] text-sos-white font-poppins-bold">
-                  Continuar
-                </Text>
-              </Pressable>
+              />
             </View>
 
             <Pressable
