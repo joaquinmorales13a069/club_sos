@@ -1,21 +1,36 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useCallback, useRef, useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-    Animated,
+    ActivityIndicator,
+    Alert,
     Image,
     LayoutAnimation,
     Platform,
     Pressable,
     Text,
-    TextInput,
     UIManager,
     useColorScheme,
     View,
 } from "react-native";
-import TabScreenView from "@/components/TabScreenView";
-import TabScrollView from "@/components/TabScrollView";
+import TabScreenView from "@/components/shared/TabScreenView";
+import TabScrollView from "@/components/shared/TabScrollView";
+import AccordionCard from "@/components/perfil/AccordionCard";
+import PerfilDatosPersonales from "@/components/perfil/PerfilDatosPersonales";
+import PerfilNotificaciones from "@/components/perfil/PerfilNotificaciones";
+import PerfilParientes from "@/components/perfil/PerfilParientes";
+import PerfilCerrarSesion from "@/components/perfil/PerfilCerrarSesion";
+import {
+    getCurrentUser,
+    findMiembroByAuthUserId,
+    getEmpresaById,
+    deleteSession,
+    updateMiembro,
+    getParientesByTitularId,
+} from "@/libs/appwrite";
+import type { AccordionKey, AccordionSection } from "@/type";
 
-// Enable LayoutAnimation on Android
+// Habilitar LayoutAnimation en Android
 if (
     Platform.OS === "android" &&
     UIManager.setLayoutAnimationEnabledExperimental
@@ -23,38 +38,9 @@ if (
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// Brand colour constants for inline style props
+// Constantes de colores de marca para props de estilo en línea
 const SOS_RED = "#CC3333";
 const SOS_BLUEGREEN = "#0066CC";
-
-// ─── Mock Data ──────────────────────────────────────────────
-const miembroMock = {
-    nombre_completo: "Joaquin Morales",
-    documento_identidad: "0012412970005N",
-    fecha_nacimiento: "1995-06-15T00:00:00.000Z",
-    sexo: "Masculino",
-    telefono: "+50588888888",
-    correo: "joaquin@ejemplo.com",
-    empresa_nombre: "SOS Medical",
-    parentesco: "titular",
-};
-
-// ─── Types ──────────────────────────────────────────────────
-type AccordionKey =
-    | "datos"
-    | "notificaciones"
-    | "parientes"
-    | "cerrar_sesion";
-
-interface AccordionSection {
-    key: AccordionKey;
-    title: string;
-    subtitle: string;
-    icon: keyof typeof MaterialIcons.glyphMap;
-    iconBg: string;
-    iconBgDark: string;
-    iconColor: string;
-}
 
 const SECTIONS: AccordionSection[] = [
     {
@@ -99,29 +85,213 @@ const SECTIONS: AccordionSection[] = [
 export default function PerfilTabScreen() {
     const scheme = useColorScheme();
     const isDark = scheme === "dark";
+    const router = useRouter();
 
     const [expandedKey, setExpandedKey] = useState<AccordionKey | null>(null);
 
-    // Editable fields state
-    const [nombre, setNombre] = useState(miembroMock.nombre_completo);
-    const [documento, setDocumento] = useState(miembroMock.documento_identidad);
-    const [correo, setCorreo] = useState(miembroMock.correo);
-    const [telefono] = useState(miembroMock.telefono);
+    // Estado de datos del miembro
+    const [miembro, setMiembro] = useState<any>(null);
+    const [empresa, setEmpresa] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-    // Notification toggles
+    // Estado de campos editables
+    const [nombre, setNombre] = useState("");
+    const [documento, setDocumento] = useState("");
+    const [correo, setCorreo] = useState("");
+    const [telefono] = useState("");
+
+    // Alternancias de notificaciones
     const [notifCitas, setNotifCitas] = useState(true);
     const [notifBeneficios, setNotifBeneficios] = useState(true);
     const [notifGeneral, setNotifGeneral] = useState(false);
 
-    const toggleSection = useCallback(
-        (key: AccordionKey) => {
-            LayoutAnimation.configureNext(
-                LayoutAnimation.Presets.easeInEaseOut,
-            );
-            setExpandedKey((prev) => (prev === key ? null : key));
-        },
-        [],
+    // Estado de parientes
+    const [parientes, setParientes] = useState<any[]>([]);
+    const [loadingParientes, setLoadingParientes] = useState(false);
+    const [togglingId, setTogglingId] = useState<string | null>(null);
+    const [hasLoadedParientes, setHasLoadedParientes] = useState(false);
+
+    // Actualizar campos editables cuando los datos del miembro cambian
+    useEffect(() => {
+        if (miembro) {
+            setNombre(miembro.nombre_completo || "");
+            setDocumento(miembro.documento_identidad || "");
+            setCorreo(miembro.correo || "");
+        }
+    }, [miembro]);
+
+    const loadUserData = useCallback(async (showLoader = true) => {
+        try {
+            if (showLoader) {
+                setLoading(true);
+            }
+            setError(null);
+
+            const user = await getCurrentUser();
+            if (!user) {
+                setError("Usuario no autenticado");
+                return;
+            }
+
+            const miembroData = await findMiembroByAuthUserId(user.$id);
+            if (!miembroData) {
+                setError("No se encontraron datos del miembro");
+                return;
+            }
+
+            setMiembro(miembroData);
+
+            if (miembroData.empresa_id) {
+                const empresaData = await getEmpresaById(
+                    miembroData.empresa_id,
+                );
+                setEmpresa(empresaData);
+            }
+        } catch (err) {
+            const message =
+                err instanceof Error ? err.message : "Error desconocido";
+            setError(message);
+            Alert.alert("Error", message);
+        } finally {
+            setLoading(false);
+            setHasLoadedOnce(true);
+        }
+    }, []);
+
+    // Cargar parientes (función reutilizable para primera carga y tras toggle)
+    const loadParientes = useCallback(async (miembroId: string) => {
+        setLoadingParientes(true);
+        try {
+            const parientesData = await getParientesByTitularId(miembroId);
+            setParientes(parientesData);
+        } catch {
+            setParientes([]);
+        } finally {
+            setLoadingParientes(false);
+            setHasLoadedParientes(true);
+        }
+    }, []);
+
+    // Cargar parientes una sola vez cuando el miembro titular está disponible
+    useEffect(() => {
+        if (
+            miembro &&
+            miembro.parentesco === "titular" &&
+            !hasLoadedParientes
+        ) {
+            loadParientes(miembro.$id);
+        }
+    }, [miembro, hasLoadedParientes, loadParientes]);
+
+    // Recargar datos cuando la pantalla recupera el foco (solo si ya se cargó una vez)
+    useFocusEffect(
+        useCallback(() => {
+            if (hasLoadedOnce) {
+                // Recargar en segundo plano sin mostrar spinner
+                loadUserData(false);
+            } else {
+                // Primera carga con spinner
+                loadUserData(true);
+            }
+        }, [loadUserData, hasLoadedOnce]),
     );
+
+    const toggleSection = useCallback((key: AccordionKey) => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setExpandedKey((prev) => (prev === key ? null : key));
+    }, []);
+
+    // Manejar guardar cambios de datos personales
+    const handleGuardarCambios = useCallback(async () => {
+        if (!miembro) return;
+
+        try {
+            setLoading(true);
+            await updateMiembro(miembro.$id, {
+                nombre_completo: nombre,
+                documento_identidad: documento,
+                correo: correo,
+            });
+
+            // Actualizar el estado local del miembro con los nuevos valores
+            setMiembro({
+                ...miembro,
+                nombre_completo: nombre,
+                documento_identidad: documento,
+                correo: correo,
+            });
+
+            Alert.alert("Éxito", "Los cambios se han guardado correctamente");
+            setLoading(false);
+        } catch (err) {
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : "Error al guardar los cambios";
+            Alert.alert("Error", message);
+            setLoading(false);
+        }
+    }, [miembro, nombre, documento, correo]);
+
+    // Manejar activar/desactivar pariente
+    const handleToggleActivo = useCallback(
+        async (parienteId: string, currentActivo: boolean) => {
+            try {
+                setTogglingId(parienteId);
+                await updateMiembro(parienteId, {
+                    activo: !currentActivo,
+                });
+                // Recargar la lista de parientes
+                if (miembro) {
+                    await loadParientes(miembro.$id);
+                }
+            } catch (err) {
+                const message =
+                    err instanceof Error
+                        ? err.message
+                        : "Error al actualizar el estado del pariente";
+                Alert.alert("Error", message);
+            } finally {
+                setTogglingId(null);
+            }
+        },
+        [miembro, loadParientes],
+    );
+
+    const handleCerrarSesion = useCallback(async () => {
+        Alert.alert(
+            "Confirmar cierre de sesión",
+            "¿Estás seguro de que deseas cerrar sesión?",
+            [
+                {
+                    text: "Cancelar",
+                    onPress: () => {},
+                    style: "cancel",
+                },
+                {
+                    text: "Cerrar sesión",
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            await deleteSession();
+                            // Redirigir a la pantalla de inicio de sesión
+                            router.replace("/(auth)/login-phone");
+                        } catch (err) {
+                            const message =
+                                err instanceof Error
+                                    ? err.message
+                                    : "Error al cerrar sesión";
+                            Alert.alert("Error", message);
+                            setLoading(false);
+                        }
+                    },
+                    style: "destructive",
+                },
+            ],
+        );
+    }, [router]);
 
     const formatDate = (isoString: string): string => {
         try {
@@ -136,7 +306,48 @@ export default function PerfilTabScreen() {
         }
     };
 
-    // ─── Render ─────────────────────────────────────────────
+    // Estado de carga
+    if (loading) {
+        return (
+            <TabScreenView className="flex-1 items-center justify-center bg-sos-white dark:bg-[#101822]">
+                <ActivityIndicator
+                    size="large"
+                    color={SOS_BLUEGREEN}
+                    style={{ marginBottom: 12 }}
+                />
+                <Text className="text-sm text-sos-gray dark:text-gray-400">
+                    Cargando datos...
+                </Text>
+            </TabScreenView>
+        );
+    }
+
+    // Estado de error
+    if (error || !miembro) {
+        return (
+            <TabScreenView className="flex-1 items-center justify-center bg-sos-white dark:bg-[#101822] px-6">
+                <MaterialIcons
+                    name="error-outline"
+                    size={48}
+                    color={SOS_RED}
+                    style={{ marginBottom: 16 }}
+                />
+                <Text className="mb-2 text-base text-center text-gray-900 font-poppins-semibold dark:text-sos-white">
+                    {error || "Error al cargar datos"}
+                </Text>
+                <Pressable
+                    onPress={loadUserData}
+                    className="px-6 py-2 mt-4 rounded-full bg-sos-bluegreen"
+                >
+                    <Text className="text-sos-white font-poppins-semibold">
+                        Reintentar
+                    </Text>
+                </Pressable>
+            </TabScreenView>
+        );
+    }
+
+    // Renderizado principal
     return (
         <TabScreenView className="flex-1 bg-sos-white dark:bg-[#101822]">
             <TabScrollView
@@ -144,11 +355,11 @@ export default function PerfilTabScreen() {
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* ── Header / Avatar ────────────────────────────── */}
+                {/* Encabezado / Avatar */}
                 <View className="items-center px-6 pt-6 pb-2">
-                    {/* Avatar */}
+                    {/* Avatar del usuario */}
                     <View
-                        className="items-center justify-center w-20 h-20 rounded-full mb-3"
+                        className="items-center justify-center w-20 h-20 mb-3 rounded-full"
                         style={{
                             backgroundColor: isDark
                                 ? "rgba(0, 102, 204, 0.15)"
@@ -159,21 +370,20 @@ export default function PerfilTabScreen() {
                             source={require("../../assets/images/GOTA.png")}
                             accessibilityLabel="Avatar de usuario"
                             resizeMode="contain"
-                            className="h-10 w-10"
+                            className="w-12 h-12"
                         />
                     </View>
 
-                    <Text className="text-xl leading-tight text-gray-900 font-poppins-bold dark:text-sos-white">
-                        {miembroMock.nombre_completo}
+                    <Text className="text-2xl leading-tight text-sos-bluegreen font-poppins-bold dark:text-sos-white">
+                        {miembro.nombre_completo}
                     </Text>
-                    <Text className="mt-1 text-sm font-poppins-medium text-sos-gray dark:text-gray-400">
-                        {miembroMock.empresa_nombre} ·{" "}
-                        {miembroMock.parentesco === "titular"
+                    <Text className="mt-1 text-sm font-poppins-semibold text-sos-gray dark:text-gray-400">
+                        {empresa?.nombre_empresa || "Empresa"} ·{" "}
+                        {miembro.parentesco === "titular"
                             ? "Titular"
-                            : miembroMock.parentesco}
+                            : miembro.parentesco}
                     </Text>
 
-                    {/* Status badge */}
                     <View
                         className="flex-row items-center mt-3 px-3 py-1.5 rounded-full"
                         style={{
@@ -192,15 +402,19 @@ export default function PerfilTabScreen() {
                             color="#22c55e"
                             style={{ marginRight: 4 }}
                         />
-                        <Text className="text-xs font-poppins-semibold text-green-600 dark:text-green-400">
+                        <Text className="text-xs text-green-600 font-poppins-semibold dark:text-green-400">
                             Cuenta activa
                         </Text>
                     </View>
                 </View>
 
-                {/* ── Accordion Sections ─────────────────────────── */}
+                {/* Secciones de acordeón */}
                 <View className="px-4 mt-6" style={{ gap: 12 }}>
-                    {SECTIONS.map((section) => (
+                    {SECTIONS.filter((section) =>
+                        section.key === "parientes"
+                            ? miembro.parentesco === "titular"
+                            : true,
+                    ).map((section) => (
                         <AccordionCard
                             key={section.key}
                             section={section}
@@ -209,7 +423,7 @@ export default function PerfilTabScreen() {
                             isDark={isDark}
                         >
                             {section.key === "datos" && (
-                                <DatosPersonalesContent
+                                <PerfilDatosPersonales
                                     isDark={isDark}
                                     nombre={nombre}
                                     setNombre={setNombre}
@@ -217,15 +431,16 @@ export default function PerfilTabScreen() {
                                     setDocumento={setDocumento}
                                     correo={correo}
                                     setCorreo={setCorreo}
-                                    telefono={telefono}
-                                    sexo={miembroMock.sexo}
+                                    telefono={miembro.telefono || ""}
+                                    sexo={miembro.sexo || ""}
                                     fechaNacimiento={formatDate(
-                                        miembroMock.fecha_nacimiento,
+                                        miembro.fecha_nacimiento || "",
                                     )}
+                                    onGuardar={handleGuardarCambios}
                                 />
                             )}
                             {section.key === "notificaciones" && (
-                                <NotificacionesContent
+                                <PerfilNotificaciones
                                     isDark={isDark}
                                     notifCitas={notifCitas}
                                     setNotifCitas={setNotifCitas}
@@ -236,643 +451,31 @@ export default function PerfilTabScreen() {
                                 />
                             )}
                             {section.key === "parientes" && (
-                                <ParientesContent isDark={isDark} />
+                                <PerfilParientes
+                                    isDark={isDark}
+                                    parientes={parientes}
+                                    loadingParientes={loadingParientes}
+                                    onToggleActivo={handleToggleActivo}
+                                    togglingId={togglingId}
+                                />
                             )}
                             {section.key === "cerrar_sesion" && (
-                                <CerrarSesionContent isDark={isDark} />
+                                <PerfilCerrarSesion
+                                    isDark={isDark}
+                                    onPress={handleCerrarSesion}
+                                />
                             )}
                         </AccordionCard>
                     ))}
                 </View>
 
-                {/* ── App version ────────────────────────────────── */}
-                <View className="items-center mt-8 px-6">
-                    <Text className="text-xs font-sans text-sos-gray dark:text-gray-500">
+                {/* Versión de la aplicación */}
+                <View className="items-center px-6 mt-8">
+                    <Text className="font-sans text-xs text-sos-gray dark:text-gray-500">
                         ClubSOS v1.0.0
                     </Text>
                 </View>
             </TabScrollView>
         </TabScreenView>
-    );
-}
-
-// ─── Accordion Card Component ───────────────────────────────
-interface AccordionCardProps {
-    section: AccordionSection;
-    isExpanded: boolean;
-    onToggle: () => void;
-    isDark: boolean;
-    children: React.ReactNode;
-}
-
-function AccordionCard({
-    section,
-    isExpanded,
-    onToggle,
-    isDark,
-    children,
-}: AccordionCardProps) {
-    const rotateAnim = useRef(new Animated.Value(0)).current;
-
-    React.useEffect(() => {
-        Animated.timing(rotateAnim, {
-            toValue: isExpanded ? 1 : 0,
-            duration: 200,
-            useNativeDriver: true,
-        }).start();
-    }, [isExpanded, rotateAnim]);
-
-    const rotate = rotateAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ["0deg", "180deg"],
-    });
-
-    return (
-        <View
-            className="rounded-2xl bg-sos-white dark:bg-[#151f2b] overflow-hidden"
-            style={{
-                shadowColor: "#000000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: isDark ? 0 : 0.06,
-                shadowRadius: 8,
-                elevation: isDark ? 0 : 2,
-                borderWidth: isDark ? 1 : 0,
-                borderColor: isDark
-                    ? "rgba(255, 255, 255, 0.06)"
-                    : "transparent",
-            }}
-        >
-            {/* Header (pressable) */}
-            <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={section.title}
-                accessibilityState={{ expanded: isExpanded }}
-                onPress={onToggle}
-                className="flex-row items-center p-4 active:opacity-80"
-                style={{ gap: 12 }}
-            >
-                {/* Icon */}
-                <View
-                    className="items-center justify-center w-10 h-10 rounded-xl"
-                    style={{
-                        backgroundColor: isDark
-                            ? section.iconBgDark
-                            : section.iconBg,
-                    }}
-                >
-                    <MaterialIcons
-                        name={section.icon}
-                        size={22}
-                        color={section.iconColor}
-                    />
-                </View>
-
-                {/* Title + Subtitle */}
-                <View className="flex-1">
-                    <Text className="text-base font-poppins-semibold text-gray-900 dark:text-sos-white">
-                        {section.title}
-                    </Text>
-                    <Text className="text-xs font-sans text-sos-gray dark:text-gray-400 mt-0.5">
-                        {section.subtitle}
-                    </Text>
-                </View>
-
-                {/* Chevron */}
-                <Animated.View style={{ transform: [{ rotate }] }}>
-                    <MaterialIcons
-                        name="expand-more"
-                        size={24}
-                        color={isDark ? "#9ca3af" : "#6b7280"}
-                    />
-                </Animated.View>
-            </Pressable>
-
-            {/* Content (shown when expanded) */}
-            {isExpanded && (
-                <View
-                    className="px-4 pb-4"
-                    style={{
-                        borderTopWidth: 1,
-                        borderTopColor: isDark
-                            ? "rgba(255, 255, 255, 0.06)"
-                            : "rgba(0, 0, 0, 0.05)",
-                    }}
-                >
-                    {children}
-                </View>
-            )}
-        </View>
-    );
-}
-
-// ─── Datos Personales Content ───────────────────────────────
-interface DatosPersonalesProps {
-    isDark: boolean;
-    nombre: string;
-    setNombre: (v: string) => void;
-    documento: string;
-    setDocumento: (v: string) => void;
-    correo: string;
-    setCorreo: (v: string) => void;
-    telefono: string;
-    sexo: string;
-    fechaNacimiento: string;
-}
-
-function DatosPersonalesContent({
-    isDark,
-    nombre,
-    setNombre,
-    documento,
-    setDocumento,
-    correo,
-    setCorreo,
-    telefono,
-    sexo,
-    fechaNacimiento,
-}: DatosPersonalesProps) {
-    return (
-        <View className="pt-4" style={{ gap: 16 }}>
-            {/* Nombre completo */}
-            <ProfileField
-                label="Nombre completo"
-                icon="person-outline"
-                isDark={isDark}
-            >
-                <TextInput
-                    accessibilityLabel="Nombre completo"
-                    value={nombre}
-                    onChangeText={setNombre}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#1A262B] text-gray-900 dark:text-sos-white text-base font-sans"
-                    style={{
-                        paddingVertical: 14,
-                        paddingLeft: 44,
-                        paddingRight: 16,
-                    }}
-                    placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
-                    autoCapitalize="words"
-                />
-            </ProfileField>
-
-            {/* Documento de identidad */}
-            <ProfileField
-                label="Documento de identidad"
-                icon="badge"
-                isDark={isDark}
-            >
-                <TextInput
-                    accessibilityLabel="Documento de identidad"
-                    value={documento}
-                    onChangeText={setDocumento}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#1A262B] text-gray-900 dark:text-sos-white text-base font-sans"
-                    style={{
-                        paddingVertical: 14,
-                        paddingLeft: 44,
-                        paddingRight: 16,
-                    }}
-                    placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
-                    autoCapitalize="characters"
-                />
-            </ProfileField>
-
-            {/* Correo electrónico */}
-            <ProfileField
-                label="Correo electrónico"
-                icon="email"
-                isDark={isDark}
-            >
-                <TextInput
-                    accessibilityLabel="Correo electrónico"
-                    value={correo}
-                    onChangeText={setCorreo}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#1A262B] text-gray-900 dark:text-sos-white text-base font-sans"
-                    style={{
-                        paddingVertical: 14,
-                        paddingLeft: 44,
-                        paddingRight: 16,
-                    }}
-                    placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                />
-            </ProfileField>
-
-            {/* Teléfono (read-only) */}
-            <ProfileField
-                label="Teléfono"
-                icon="phone"
-                isDark={isDark}
-                badge="Verificado"
-            >
-                <TextInput
-                    accessibilityLabel="Teléfono verificado"
-                    value={telefono}
-                    editable={false}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[#1A262B] text-gray-500 dark:text-gray-400 text-base font-sans"
-                    style={{
-                        paddingVertical: 14,
-                        paddingLeft: 44,
-                        paddingRight: 16,
-                        opacity: 0.7,
-                    }}
-                />
-            </ProfileField>
-
-            {/* Sexo (read-only) */}
-            <ReadOnlyRow label="Sexo" value={sexo} isDark={isDark} />
-
-            {/* Fecha de nacimiento (read-only) */}
-            <ReadOnlyRow
-                label="Fecha de nacimiento"
-                value={fechaNacimiento}
-                isDark={isDark}
-            />
-
-            {/* Save button */}
-            <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Guardar cambios"
-                className="flex-row items-center justify-center w-full h-12 rounded-full bg-sos-bluegreen active:opacity-90 mt-2"
-                style={{
-                    shadowColor: SOS_BLUEGREEN,
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 10,
-                    elevation: 4,
-                }}
-            >
-                <MaterialIcons
-                    name="save"
-                    size={18}
-                    color="#ffffff"
-                    style={{ marginRight: 8 }}
-                />
-                <Text className="text-base font-poppins-bold text-sos-white">
-                    Guardar cambios
-                </Text>
-            </Pressable>
-        </View>
-    );
-}
-
-// ─── Profile Field Wrapper ──────────────────────────────────
-interface ProfileFieldProps {
-    label: string;
-    icon: keyof typeof MaterialIcons.glyphMap;
-    isDark: boolean;
-    badge?: string;
-    children: React.ReactNode;
-}
-
-function ProfileField({
-    label,
-    icon,
-    isDark,
-    badge,
-    children,
-}: ProfileFieldProps) {
-    return (
-        <View style={{ gap: 6 }}>
-            <View className="flex-row justify-between items-center">
-                <Text className="text-sm text-gray-900 font-poppins-bold dark:text-gray-200">
-                    {label}
-                </Text>
-                {badge && (
-                    <View
-                        className="flex-row items-center"
-                        style={{ gap: 4 }}
-                    >
-                        <MaterialIcons
-                            name="check-circle"
-                            size={14}
-                            color="#22c55e"
-                        />
-                        <Text className="text-xs text-green-600 font-poppins-semibold dark:text-green-400">
-                            {badge}
-                        </Text>
-                    </View>
-                )}
-            </View>
-            <View className="relative">
-                <View className="absolute top-0 bottom-0 left-4 z-10 justify-center">
-                    <MaterialIcons name={icon} size={20} color="#9ca3af" />
-                </View>
-                {children}
-            </View>
-        </View>
-    );
-}
-
-// ─── Read-Only Row ──────────────────────────────────────────
-interface ReadOnlyRowProps {
-    label: string;
-    value: string;
-    isDark: boolean;
-}
-
-function ReadOnlyRow({ label, value, isDark }: ReadOnlyRowProps) {
-    return (
-        <View
-            className="pb-3"
-            style={{
-                borderBottomWidth: 1,
-                borderBottomColor: isDark
-                    ? "rgba(255, 255, 255, 0.06)"
-                    : "rgba(0, 0, 0, 0.05)",
-            }}
-        >
-            <Text className="text-xs font-poppins-medium text-sos-gray dark:text-gray-500 mb-1 uppercase tracking-wide">
-                {label}
-            </Text>
-            <Text className="text-base font-poppins-medium text-gray-900 dark:text-sos-white">
-                {value}
-            </Text>
-        </View>
-    );
-}
-
-// ─── Notificaciones Content ─────────────────────────────────
-interface NotificacionesProps {
-    isDark: boolean;
-    notifCitas: boolean;
-    setNotifCitas: (v: boolean) => void;
-    notifBeneficios: boolean;
-    setNotifBeneficios: (v: boolean) => void;
-    notifGeneral: boolean;
-    setNotifGeneral: (v: boolean) => void;
-}
-
-function NotificacionesContent({
-    isDark,
-    notifCitas,
-    setNotifCitas,
-    notifBeneficios,
-    setNotifBeneficios,
-    notifGeneral,
-    setNotifGeneral,
-}: NotificacionesProps) {
-    return (
-        <View className="pt-4" style={{ gap: 4 }}>
-            <ToggleRow
-                label="Recordatorios de citas"
-                description="Recibe alertas antes de tus citas médicas"
-                value={notifCitas}
-                onToggle={() => setNotifCitas(!notifCitas)}
-                isDark={isDark}
-            />
-            <ToggleRow
-                label="Nuevos beneficios"
-                description="Entérate de descuentos y promociones"
-                value={notifBeneficios}
-                onToggle={() => setNotifBeneficios(!notifBeneficios)}
-                isDark={isDark}
-            />
-            <ToggleRow
-                label="Comunicaciones generales"
-                description="Noticias y actualizaciones de ClubSOS"
-                value={notifGeneral}
-                onToggle={() => setNotifGeneral(!notifGeneral)}
-                isDark={isDark}
-                isLast
-            />
-        </View>
-    );
-}
-
-// ─── Toggle Row ─────────────────────────────────────────────
-interface ToggleRowProps {
-    label: string;
-    description: string;
-    value: boolean;
-    onToggle: () => void;
-    isDark: boolean;
-    isLast?: boolean;
-}
-
-function ToggleRow({
-    label,
-    description,
-    value,
-    onToggle,
-    isDark,
-    isLast,
-}: ToggleRowProps) {
-    return (
-        <Pressable
-            accessibilityRole="switch"
-            accessibilityState={{ checked: value }}
-            accessibilityLabel={label}
-            onPress={onToggle}
-            className="flex-row items-center py-3.5"
-            style={{
-                gap: 12,
-                borderBottomWidth: isLast ? 0 : 1,
-                borderBottomColor: isDark
-                    ? "rgba(255, 255, 255, 0.06)"
-                    : "rgba(0, 0, 0, 0.05)",
-            }}
-        >
-            <View className="flex-1">
-                <Text className="text-sm font-poppins-semibold text-gray-900 dark:text-sos-white">
-                    {label}
-                </Text>
-                <Text className="text-xs font-sans text-sos-gray dark:text-gray-400 mt-0.5">
-                    {description}
-                </Text>
-            </View>
-
-            {/* Custom toggle */}
-            <View
-                className="w-11 h-6 rounded-full justify-center"
-                style={{
-                    backgroundColor: value
-                        ? SOS_BLUEGREEN
-                        : isDark
-                          ? "#374151"
-                          : "#d1d5db",
-                    paddingHorizontal: 2,
-                }}
-            >
-                <View
-                    className="w-5 h-5 rounded-full bg-sos-white"
-                    style={{
-                        alignSelf: value ? "flex-end" : "flex-start",
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 2,
-                        elevation: 2,
-                    }}
-                />
-            </View>
-        </Pressable>
-    );
-}
-
-// ─── Parientes Content ──────────────────────────────────────
-function ParientesContent({ isDark }: { isDark: boolean }) {
-    // Mock parientes data
-    const parientes = [
-        {
-            nombre: "Ana Morales",
-            parentesco: "Cónyuge",
-            estado: "activo",
-        },
-        {
-            nombre: "Carlos Morales",
-            parentesco: "Hijo",
-            estado: "pendiente",
-        },
-    ];
-
-    return (
-        <View className="pt-4" style={{ gap: 12 }}>
-            <Text className="text-sm font-sans text-sos-gray dark:text-gray-400">
-                Aquí puedes ver y gestionar las cuentas de tus familiares
-                vinculados.
-            </Text>
-
-            {parientes.map((p, index) => (
-                <View
-                    key={index}
-                    className="flex-row items-center p-3 rounded-xl"
-                    style={{
-                        gap: 12,
-                        backgroundColor: isDark
-                            ? "rgba(255, 255, 255, 0.03)"
-                            : "rgba(0, 0, 0, 0.02)",
-                        borderWidth: 1,
-                        borderColor: isDark
-                            ? "rgba(255, 255, 255, 0.06)"
-                            : "rgba(0, 0, 0, 0.05)",
-                    }}
-                >
-                    {/* Avatar circle */}
-                    <View
-                        className="items-center justify-center w-10 h-10 rounded-full"
-                        style={{
-                            backgroundColor: isDark
-                                ? "rgba(0, 102, 204, 0.15)"
-                                : "rgba(0, 102, 204, 0.08)",
-                        }}
-                    >
-                        <Text className="text-sm font-poppins-bold text-sos-bluegreen">
-                            {p.nombre.charAt(0)}
-                        </Text>
-                    </View>
-
-                    {/* Info */}
-                    <View className="flex-1">
-                        <Text className="text-sm font-poppins-semibold text-gray-900 dark:text-sos-white">
-                            {p.nombre}
-                        </Text>
-                        <Text className="text-xs font-sans text-sos-gray dark:text-gray-400">
-                            {p.parentesco}
-                        </Text>
-                    </View>
-
-                    {/* Status */}
-                    <View
-                        className="flex-row items-center px-2.5 py-1 rounded-full"
-                        style={{
-                            backgroundColor:
-                                p.estado === "activo"
-                                    ? isDark
-                                        ? "rgba(34, 197, 94, 0.12)"
-                                        : "rgba(34, 197, 94, 0.08)"
-                                    : isDark
-                                      ? "rgba(245, 158, 11, 0.12)"
-                                      : "rgba(245, 158, 11, 0.08)",
-                        }}
-                    >
-                        <MaterialIcons
-                            name={
-                                p.estado === "activo"
-                                    ? "check-circle"
-                                    : "hourglass-top"
-                            }
-                            size={12}
-                            color={
-                                p.estado === "activo" ? "#22c55e" : "#f59e0b"
-                            }
-                            style={{ marginRight: 4 }}
-                        />
-                        <Text
-                            className="text-xs font-poppins-medium"
-                            style={{
-                                color:
-                                    p.estado === "activo"
-                                        ? "#22c55e"
-                                        : "#f59e0b",
-                            }}
-                        >
-                            {p.estado === "activo" ? "Activo" : "Pendiente"}
-                        </Text>
-                    </View>
-                </View>
-            ))}
-
-            {/* Add pariente button */}
-            <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vincular nuevo pariente"
-                className="flex-row items-center justify-center w-full py-3 rounded-xl active:opacity-80 mt-1"
-                style={{
-                    borderWidth: 2,
-                    borderColor: isDark
-                        ? "rgba(0, 102, 204, 0.3)"
-                        : "rgba(0, 102, 204, 0.2)",
-                    borderStyle: "dashed",
-                }}
-            >
-                <MaterialIcons
-                    name="person-add"
-                    size={18}
-                    color={SOS_BLUEGREEN}
-                    style={{ marginRight: 8 }}
-                />
-                <Text className="text-sm font-poppins-semibold text-sos-bluegreen">
-                    Vincular nuevo pariente
-                </Text>
-            </Pressable>
-        </View>
-    );
-}
-
-// ─── Cerrar Sesión Content ──────────────────────────────────
-function CerrarSesionContent({ isDark }: { isDark: boolean }) {
-    return (
-        <View className="pt-4" style={{ gap: 16 }}>
-            <Text className="text-sm font-sans text-sos-gray dark:text-gray-400">
-                Al cerrar sesión se eliminará tu información local. Podrás
-                iniciar sesión nuevamente con tu número de teléfono.
-            </Text>
-
-            {/* Logout button */}
-            <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Cerrar sesión"
-                className="flex-row items-center justify-center w-full h-12 rounded-full active:opacity-90"
-                style={{
-                    backgroundColor: isDark
-                        ? "rgba(204, 51, 51, 0.12)"
-                        : "rgba(204, 51, 51, 0.06)",
-                    borderWidth: 2,
-                    borderColor: isDark
-                        ? "rgba(204, 51, 51, 0.3)"
-                        : "rgba(204, 51, 51, 0.2)",
-                }}
-            >
-                <MaterialIcons
-                    name="logout"
-                    size={18}
-                    color={SOS_RED}
-                    style={{ marginRight: 8 }}
-                />
-                <Text className="text-base font-poppins-bold text-sos-red">
-                    Cerrar sesión
-                </Text>
-            </Pressable>
-        </View>
     );
 }

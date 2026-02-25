@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
     Alert,
     Image,
@@ -7,14 +7,15 @@ import {
     ActivityIndicator,
     useColorScheme,
 } from "react-native";
+import { useFocusEffect } from "expo-router";
 
-import TabScreenView from "@/components/TabScreenView";
-import TabScrollView from "@/components/TabScrollView";
+import TabScreenView from "@/components/shared/TabScreenView";
+import TabScrollView from "@/components/shared/TabScrollView";
 
-import BeneficioCard, { type Beneficio } from "@/components/BeneficioCard";
-import CitaCard, { type Cita } from "@/components/CitaCard";
-import MembresiaCard from "@/components/MembresiaCard";
-import SupportButton from "@/components/SupportButton";
+import BeneficioCard from "@/components/beneficios/BeneficioCard";
+import CitaCard, { type Cita } from "@/components/citas/CitaCard";
+import MembresiaCard from "@/components/inicio/MembresiaCard";
+import SupportButton from "@/components/inicio/SupportButton";
 
 import {
     getCurrentUser,
@@ -42,16 +43,15 @@ export default function HomeTabScreen() {
     const [beneficios, setBeneficios] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
     const scheme = useColorScheme();
     const isDark = scheme === "dark";
 
-    useEffect(() => {
-        loadUserData();
-    }, []);
-
-    const loadUserData = async () => {
+    const loadUserData = useCallback(async (showLoader = true) => {
         try {
-            setLoading(true);
+            if (showLoader) {
+                setLoading(true);
+            }
             setError(null);
 
             // Get current authenticated user
@@ -87,8 +87,22 @@ export default function HomeTabScreen() {
             );
         } finally {
             setLoading(false);
+            setHasLoadedOnce(true);
         }
-    };
+    }, []);
+
+    // Recargar datos cuando la pantalla recupera el foco (solo si ya se cargó una vez)
+    useFocusEffect(
+        useCallback(() => {
+            if (hasLoadedOnce) {
+                // Recargar en segundo plano sin mostrar spinner
+                loadUserData(false);
+            } else {
+                // Primera carga con spinner
+                loadUserData(true);
+            }
+        }, [loadUserData, hasLoadedOnce]),
+    );
 
     const primerNombre =
         miembro?.nombre_completo?.trim().split(/\s+/)[0] ?? "Usuario";

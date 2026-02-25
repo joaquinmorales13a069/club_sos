@@ -1,5 +1,5 @@
 import { Redirect } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 import { getCurrentUser } from "@/libs/appwrite";
@@ -7,8 +7,13 @@ import { getCurrentUser } from "@/libs/appwrite";
 export default function Index() {
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const hasChecked = useRef(false);
 
     useEffect(() => {
+        // Evitar múltiples verificaciones
+        if (hasChecked.current) return;
+        hasChecked.current = true;
+
         getCurrentUser().then((user) => {
             setIsAuthenticated(!!user);
             setIsLoading(false);

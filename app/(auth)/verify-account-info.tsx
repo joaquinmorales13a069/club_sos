@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import TopAppBar from "@/components/TopAppBar";
+import TopAppBar from "@/components/auth/TopAppBar";
 import {
     createMiembro,
     findMiembroByCorreo,
@@ -193,10 +193,13 @@ export default function VerifyAccountInfoScreen() {
 
         setIsSubmitting(true);
         try {
-            const normalizedCorreo = noTengoCorreo ? "" : correo.trim().toLowerCase();
+            const normalizedCorreo = noTengoCorreo
+                ? ""
+                : correo.trim().toLowerCase();
 
             if (normalizedCorreo) {
-                const existingMiembro = await findMiembroByCorreo(normalizedCorreo);
+                const existingMiembro =
+                    await findMiembroByCorreo(normalizedCorreo);
                 if (existingMiembro) {
                     setErrors((prev) => ({
                         ...prev,
@@ -233,7 +236,10 @@ export default function VerifyAccountInfoScreen() {
 
             router.push("/(auth)/account-activation" as never);
         } catch (error) {
-            console.error("[verify-account-info] Error creating miembro:", error);
+            console.error(
+                "[verify-account-info] Error creating miembro:",
+                error,
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -290,7 +296,8 @@ export default function VerifyAccountInfoScreen() {
                         Información personal
                     </Text>
                     <Text className="font-sans text-base leading-relaxed text-sos-gray dark:text-gray-300">
-                        Complete sus datos para que podamos crear su cuenta en ClubSOS.
+                        Complete sus datos para que podamos crear su cuenta en
+                        ClubSOS.
                     </Text>
                 </View>
 
@@ -747,7 +754,8 @@ export default function VerifyAccountInfoScreen() {
                         onPressOut={handlePressOut}
                         disabled={isSubmitting}
                         className={`flex-row justify-center items-center w-full h-14 rounded-full bg-sos-bluegreen active:opacity-90 ${
-                            isSubmitting ? "opacity-70" : ""}`}
+                            isSubmitting ? "opacity-70" : ""
+                        }`}
                         style={{
                             shadowColor: SOS_BLUEGREEN,
                             shadowOffset: { width: 0, height: 4 },
