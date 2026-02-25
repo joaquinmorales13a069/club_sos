@@ -111,6 +111,7 @@ export default function PerfilTabScreen() {
     const [parientes, setParientes] = useState<any[]>([]);
     const [loadingParientes, setLoadingParientes] = useState(false);
     const [togglingId, setTogglingId] = useState<string | null>(null);
+    const [hasLoadedParientes, setHasLoadedParientes] = useState(false);
 
     // Actualizar campos editables cuando los datos del miembro cambian
     useEffect(() => {
@@ -148,21 +149,6 @@ export default function PerfilTabScreen() {
                 );
                 setEmpresa(empresaData);
             }
-
-            // Si es titular, cargar parientes
-            if (miembroData.parentesco === "titular") {
-                setLoadingParientes(true);
-                try {
-                    const parientesData = await getParientesByTitularId(
-                        miembroData.$id,
-                    );
-                    setParientes(parientesData);
-                } catch {
-                    setParientes([]);
-                } finally {
-                    setLoadingParientes(false);
-                }
-            }
         } catch (err) {
             const message =
                 err instanceof Error ? err.message : "Error desconocido";
@@ -173,6 +159,31 @@ export default function PerfilTabScreen() {
             setHasLoadedOnce(true);
         }
     }, []);
+
+    // Cargar parientes (función reutilizable para primera carga y tras toggle)
+    const loadParientes = useCallback(async (miembroId: string) => {
+        setLoadingParientes(true);
+        try {
+            const parientesData = await getParientesByTitularId(miembroId);
+            setParientes(parientesData);
+        } catch {
+            setParientes([]);
+        } finally {
+            setLoadingParientes(false);
+            setHasLoadedParientes(true);
+        }
+    }, []);
+
+    // Cargar parientes una sola vez cuando el miembro titular está disponible
+    useEffect(() => {
+        if (
+            miembro &&
+            miembro.parentesco === "titular" &&
+            !hasLoadedParientes
+        ) {
+            loadParientes(miembro.$id);
+        }
+    }, [miembro, hasLoadedParientes, loadParientes]);
 
     // Recargar datos cuando la pantalla recupera el foco (solo si ya se cargó una vez)
     useFocusEffect(
@@ -234,10 +245,7 @@ export default function PerfilTabScreen() {
                 });
                 // Recargar la lista de parientes
                 if (miembro) {
-                    const parientesData = await getParientesByTitularId(
-                        miembro.$id,
-                    );
-                    setParientes(parientesData);
+                    await loadParientes(miembro.$id);
                 }
             } catch (err) {
                 const message =
@@ -249,7 +257,7 @@ export default function PerfilTabScreen() {
                 setTogglingId(null);
             }
         },
-        [miembro],
+        [miembro, loadParientes],
     );
 
     const handleCerrarSesion = useCallback(async () => {

@@ -188,28 +188,7 @@ const PerfilParientes = React.memo(function PerfilParientes({
                 );
             })}
 
-            <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vincular nuevo pariente"
-                className="flex-row items-center justify-center w-full py-3 mt-1 rounded-xl active:opacity-80"
-                style={{
-                    borderWidth: 2,
-                    borderColor: isDark
-                        ? "rgba(0, 102, 204, 0.3)"
-                        : "rgba(0, 102, 204, 0.2)",
-                    borderStyle: "dashed",
-                }}
-            >
-                <MaterialIcons
-                    name="person-add"
-                    size={18}
-                    color={SOS_BLUEGREEN}
-                    style={{ marginRight: 8 }}
-                />
-                <Text className="text-sm font-poppins-semibold text-sos-bluegreen">
-                    Vincular nuevo pariente
-                </Text>
-            </Pressable>
+            
         </View>
     );
 });
