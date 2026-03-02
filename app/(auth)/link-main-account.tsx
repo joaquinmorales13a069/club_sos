@@ -3,8 +3,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Pressable,
+    Image,
     ScrollView,
     Text,
     TextInput,
@@ -15,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import TopAppBar from "@/components/auth/TopAppBar";
 import TitularFoundCard from "@/components/auth/TitularFoundCard";
+import SOSButton from "@/components/shared/SOSButton";
 import { findTitular } from "@/libs/appwrite";
 
 // ─── Storage Keys ───────────────────────────────────────────
@@ -24,8 +24,7 @@ const PARENTESCO_KEY = "clubSOS.miembro.parentesco";
 const TITULAR_ID_KEY = "clubSOS.miembro.titular_miembro_id";
 const TITULAR_SNAPSHOT_KEY = "clubSOS.miembro.titular_snapshot";
 
-// Brand colour constants for inline style props (RN icon / shadow limitation)
-const SOS_BLUEGREEN = "#0066CC";
+// Brand colour constants for inline style props
 const SOS_RED = "#CC3333";
 
 // ─── Progress Config ────────────────────────────────────────
@@ -185,12 +184,12 @@ export default function LinkMainAccountScreen() {
             >
                 {/* Title + Description */}
                 <View className="mb-8">
-                    <Text className="mb-2 text-2xl leading-tight text-gray-900 font-poppins-bold dark:text-sos-white">
+                    <Text className="mb-2 text-2xl leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                         Busca al titular
                     </Text>
                     <Text className="font-sans text-base leading-relaxed text-sos-gray dark:text-gray-300">
                         Ingresa los datos del trabajador de{" "}
-                        <Text className="font-poppins-semibold text-gray-800 dark:text-gray-200">
+                        <Text className="text-gray-800 font-poppins-semibold dark:text-gray-200">
                             {empresaName || "la empresa"}
                         </Text>{" "}
                         para vincular tu cuenta como beneficiario.
@@ -201,15 +200,14 @@ export default function LinkMainAccountScreen() {
                 <View style={{ gap: 24 }}>
                     {/* Input: Nombre completo */}
                     <View style={{ gap: 8 }}>
-                        <Text className="text-sm text-gray-900 font-poppins-bold dark:text-gray-200">
+                        <Text className="text-sm font-poppins-bold text-sos-gray dark:text-gray-300">
                             Nombre completo del titular
                         </Text>
                         <View className="relative">
-                            <View className="absolute top-0 bottom-0 left-4 z-10 justify-center">
-                                <MaterialIcons
-                                    name="person"
-                                    size={22}
-                                    color="#9ca3af"
+                            <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
+                                <Image
+                                    source={require("@/assets/images/ICON-titular.webp")}
+                                    style={{ width: 22, height: 22 }}
                                 />
                             </View>
                             <TextInput
@@ -238,15 +236,14 @@ export default function LinkMainAccountScreen() {
 
                     {/* Input: Documento de identidad */}
                     <View style={{ gap: 8 }}>
-                        <Text className="text-sm text-gray-900 font-poppins-bold dark:text-gray-200">
+                        <Text className="text-sm font-poppins-bold text-sos-gray dark:text-gray-300">
                             Documento de identidad
                         </Text>
                         <View className="relative">
-                            <View className="absolute top-0 bottom-0 left-4 z-10 justify-center">
-                                <MaterialIcons
-                                    name="badge"
-                                    size={22}
-                                    color="#9ca3af"
+                            <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
+                                <Image
+                                    source={require("@/assets/images/ICON-id.webp")}
+                                    style={{ width: 22, height: 22 }}
                                 />
                             </View>
                             <TextInput
@@ -274,41 +271,15 @@ export default function LinkMainAccountScreen() {
                         </View>
                     </View>
 
-                    {/* Search Button (Secondary — AzulVerde) */}
-                    <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Buscar titular"
-                        onPress={handleSearch}
-                        disabled={isLoading}
-                        className="flex-row justify-center items-center mt-2 w-full rounded-full bg-sos-bluegreen active:opacity-90"
-                        style={[
-                            { paddingVertical: 14, paddingHorizontal: 16 },
-                            {
-                                shadowColor: SOS_BLUEGREEN,
-                                shadowOffset: { width: 0, height: 4 },
-                                shadowOpacity: 0.3,
-                                shadowRadius: 10,
-                                elevation: 4,
-                            },
-                            isLoading && { opacity: 0.7 },
-                        ]}
-                    >
-                        {isLoading ? (
-                            <ActivityIndicator color="#ffffff" size="small" />
-                        ) : (
-                            <>
-                                <MaterialIcons
-                                    name="search"
-                                    size={20}
-                                    color="#ffffff"
-                                    style={{ marginRight: 8 }}
-                                />
-                                <Text className="text-base font-poppins-bold text-sos-white">
-                                    Buscar titular
-                                </Text>
-                            </>
-                        )}
-                    </Pressable>
+                    <View className="mt-2">
+                        <SOSButton
+                            label="Buscar titular"
+                            loading={isLoading}
+                            loadingLabel="Buscando titular..."
+                            accessibilityLabel="Buscar titular"
+                            onPress={handleSearch}
+                        />
+                    </View>
                 </View>
 
                 {/* ── Error Message ────────────────────────────────── */}
@@ -354,27 +325,12 @@ export default function LinkMainAccountScreen() {
                         : "rgba(255, 255, 255, 0.9)",
                 }}
             >
-                <Pressable
-                    accessibilityRole="button"
+                <SOSButton
+                    label="Confirmar vínculo"
                     accessibilityLabel="Confirmar vínculo"
-                    accessibilityState={{ disabled: !foundEmployee }}
                     onPress={handleConfirm}
                     disabled={!foundEmployee}
-                    className={`w-full flex-row items-center justify-center rounded-full h-14 bg-sos-bluegreen active:opacity-90 ${
-                        !foundEmployee ? "opacity-50" : ""
-                    }`}
-                    style={{
-                        shadowColor: SOS_BLUEGREEN,
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.39,
-                        shadowRadius: 14,
-                        elevation: 6,
-                    }}
-                >
-                    <Text className="text-base font-poppins-bold text-sos-white">
-                        Confirmar vínculo
-                    </Text>
-                </Pressable>
+                />
             </View>
         </SafeAreaView>
     );

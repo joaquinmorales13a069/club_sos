@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
     ActivityIndicator,
+    Image,
     Keyboard,
     Pressable,
     Text,
@@ -14,8 +15,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CompanyFoundCard from "@/components/auth/CompanyFoundCard";
-import TopAppBar from "@/components/auth/TopAppBar";
+import SOSButton from "@/components/shared/SOSButton";
 import { findEmpresaByCodigo } from "@/libs/appwrite";
+import TopAppBar from "@/components/auth/TopAppBar";
 
 // Brand colour constant for inline style props (RN icon limitation)
 const SOS_BLUEGREEN = "#0066CC";
@@ -129,7 +131,7 @@ export default function VerifyCompanyScreen() {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <SafeAreaView className="flex-1 bg-sos-white dark:bg-[#101822]">
-                {/* Top App Bar with step indicator (step 1 of 5) */}
+                {/* Top App Bar with step indicator (step 1 graof 5) */}
                 <TopAppBar
                     onBack={handleGoBack}
                     currentStep={1}
@@ -139,7 +141,7 @@ export default function VerifyCompanyScreen() {
                 {/* Main content */}
                 <View className="flex-1 px-4">
                     {/* Headline */}
-                    <Text className="text-[32px] font-poppins-bold leading-tight tracking-tight text-left pb-2 pt-2 text-gray-900 dark:text-sos-white">
+                    <Text className="text-[32px] font-poppins-bold leading-tight tracking-tight text-left pb-2 pt-2 text-sos-bluegreen dark:text-sos-white">
                         Vincula tu empresa
                     </Text>
 
@@ -164,7 +166,7 @@ export default function VerifyCompanyScreen() {
                             } bg-sos-white dark:bg-gray-800`}
                         >
                             <TextInput
-                                className="flex-1 px-4 h-full font-sans text-base text-gray-900 dark:text-sos-white"
+                                className="flex-1 h-full px-4 font-sans text-base text-gray-900 dark:text-sos-white"
                                 placeholder="Ej. EMP-1234"
                                 placeholderTextColor={
                                     scheme === "dark" ? "#6b7280" : "#617289"
@@ -236,38 +238,28 @@ export default function VerifyCompanyScreen() {
                         />
                     )}
 
-                    {/* Spacer */}
-                    <View className="flex-1" />
+                    {/* Image */}
+                    <View className="flex-1 mt-4 mx-auto w-full max-w-[480px] overflow-hidden rounded-xl">
+                        <Image
+                            source={require("../../assets/images/VerificarEmpresa-Imagen.webp")}
+                            className="flex-1 w-full"
+                            resizeMode="cover"
+                            accessibilityLabel="Oficina de empresa"
+                        />
+                    </View>
 
                     {/* Bottom actions */}
                     <View className="py-6 mt-4">
-                        <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel="Confirmar empresa"
-                            accessibilityState={{
-                                disabled: !empresaEncontrada,
-                            }}
-                            disabled={!empresaEncontrada}
+                        <SOSButton
+                            label="Confirmar empresa"
                             onPress={confirmCompany}
-                            className={`w-full flex-row items-center justify-center rounded-full h-14 bg-sos-bluegreen active:opacity-90 ${
-                                !empresaEncontrada ? "opacity-50" : ""
-                            }`}
-                            style={{
-                                shadowColor: SOS_BLUEGREEN,
-                                shadowOffset: { width: 0, height: 4 },
-                                shadowOpacity: 0.39,
-                                shadowRadius: 14,
-                                elevation: 6,
-                            }}
-                        >
-                            <Text className="text-base font-poppins-bold text-sos-white">
-                                Confirmar empresa
-                            </Text>
-                        </Pressable>
+                            disabled={!empresaEncontrada}
+                            accessibilityLabel="Confirmar empresa"
+                        />
 
                         <Text className="mt-4 text-xs text-center font-poppins-medium text-sos-gray dark:text-gray-500">
-                            Tu empresa deberá aprobar tu cuenta al finalizar el
-                            registro.
+                            Tu empresa o familiar titular deberá aprobar tu
+                            cuenta al finalizar el registro.
                         </Text>
                     </View>
                 </View>
