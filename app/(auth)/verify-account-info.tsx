@@ -1,8 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-    Animated,
+    Image,
     Pressable,
     ScrollView,
     Text,
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import TopAppBar from "@/components/auth/TopAppBar";
+import SOSButton from "@/components/shared/SOSButton";
 import {
     createMiembro,
     findMiembroByCorreo,
@@ -23,7 +24,6 @@ import {
 
 // Brand colour constants for inline style props (RN icon / shadow limitation)
 const SOS_RED = "#CC3333";
-const SOS_BLUEGREEN = "#0066CC";
 
 // ─── Progress Config ────────────────────────────────────────
 // Onboarding flow: 1 = verify-company, 2 = verify-account-type,
@@ -67,9 +67,6 @@ export default function VerifyAccountInfoScreen() {
     const [noTengoCorreo, setNoTengoCorreo] = useState(false);
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Button press-feedback animation
-    const buttonScale = useRef(new Animated.Value(1)).current;
 
     // ─── Load verified phone + existing draft on mount ──────
     useEffect(() => {
@@ -245,22 +242,6 @@ export default function VerifyAccountInfoScreen() {
         }
     };
 
-    // ─── Button press feedback ──────────────────────────────
-    const handlePressIn = () => {
-        Animated.spring(buttonScale, {
-            toValue: 0.97,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const handlePressOut = () => {
-        Animated.spring(buttonScale, {
-            toValue: 1,
-            friction: 3,
-            useNativeDriver: true,
-        }).start();
-    };
-
     // ─── Helper: clear a single field error ─────────────────
     const clearFieldError = (field: keyof FormErrors) => {
         if (errors[field]) {
@@ -292,7 +273,7 @@ export default function VerifyAccountInfoScreen() {
             >
                 {/* Title + Description */}
                 <View className="mb-8">
-                    <Text className="mb-2 text-2xl leading-tight text-gray-900 font-poppins-bold dark:text-sos-white">
+                    <Text className="mb-2 text-2xl leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                         Información personal
                     </Text>
                     <Text className="font-sans text-base leading-relaxed text-sos-gray dark:text-gray-300">
@@ -320,20 +301,22 @@ export default function VerifyAccountInfoScreen() {
                         style={{ gap: 8 }}
                     >
                         <View
-                            className="justify-center items-center w-8 h-8 rounded-lg"
+                            className="items-center justify-center w-8 h-8 rounded-lg"
                             style={{
                                 backgroundColor: isDark
                                     ? "rgba(204, 51, 51, 0.15)"
                                     : "#fef2f2",
                             }}
                         >
-                            <MaterialIcons
-                                name="person"
-                                size={18}
-                                color={SOS_RED}
+                            <Image
+                                source={require("@/assets/images/ICON-titular.webp")}
+                                style={{ width: 24, height: 24 }}
                             />
                         </View>
-                        <Text className="text-sm tracking-widest uppercase font-poppins-bold text-sos-gray dark:text-gray-400">
+                        <Text
+                            numberOfLines={1}
+                            className="text-sm tracking-widest uppercase font-poppins-bold text-sos-gray dark:text-gray-400"
+                        >
                             Datos personales
                         </Text>
                     </View>
@@ -341,15 +324,14 @@ export default function VerifyAccountInfoScreen() {
                     <View style={{ gap: 20 }}>
                         {/* ── nombre_completo ──────────────────────── */}
                         <View style={{ gap: 6 }}>
-                            <Text className="text-sm text-gray-900 font-poppins-bold dark:text-gray-200">
+                            <Text className="text-base font-poppins-bold text-sos-gray dark:text-gray-300">
                                 Nombre completo
                             </Text>
                             <View className="relative">
-                                <View className="absolute top-0 bottom-0 left-4 z-10 justify-center">
-                                    <MaterialIcons
-                                        name="person-outline"
-                                        size={20}
-                                        color="#9ca3af"
+                                <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
+                                    <Image
+                                        source={require("@/assets/images/ICON-titular.webp")}
+                                        style={{ width: 20, height: 20 }}
                                     />
                                 </View>
                                 <TextInput
@@ -386,15 +368,14 @@ export default function VerifyAccountInfoScreen() {
 
                         {/* ── documento_identidad ──────────────────── */}
                         <View style={{ gap: 6 }}>
-                            <Text className="text-sm text-gray-900 font-poppins-bold dark:text-gray-200">
+                            <Text className="text-base font-poppins-bold text-sos-gray dark:text-gray-300">
                                 Documento de identidad
                             </Text>
                             <View className="relative">
-                                <View className="absolute top-0 bottom-0 left-4 z-10 justify-center">
-                                    <MaterialIcons
-                                        name="badge"
-                                        size={20}
-                                        color="#9ca3af"
+                                <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
+                                    <Image
+                                        source={require("@/assets/images/ICON-id.webp")}
+                                        style={{ width: 20, height: 20 }}
                                     />
                                 </View>
                                 <TextInput
@@ -431,15 +412,14 @@ export default function VerifyAccountInfoScreen() {
 
                         {/* ── fecha_nacimiento ─────────────────────── */}
                         <View style={{ gap: 6 }}>
-                            <Text className="text-sm text-gray-900 font-poppins-bold dark:text-gray-200">
+                            <Text className="text-base font-poppins-bold text-sos-gray dark:text-gray-300">
                                 Fecha de nacimiento
                             </Text>
                             <View className="relative">
-                                <View className="absolute top-0 bottom-0 left-4 z-10 justify-center">
-                                    <MaterialIcons
-                                        name="calendar-today"
-                                        size={20}
-                                        color="#9ca3af"
+                                <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
+                                    <Image
+                                        source={require("@/assets/images/ICON-calendario.webp")}
+                                        style={{ width: 20, height: 20 }}
                                     />
                                 </View>
                                 <TextInput
@@ -566,29 +546,31 @@ export default function VerifyAccountInfoScreen() {
                         style={{ gap: 8 }}
                     >
                         <View
-                            className="justify-center items-center w-8 h-8 rounded-lg"
+                            className="items-center justify-center w-8 h-8 rounded-lg"
                             style={{
                                 backgroundColor: isDark
                                     ? "rgba(0, 102, 204, 0.15)"
                                     : "#eff6ff",
                             }}
                         >
-                            <MaterialIcons
-                                name="contact-phone"
-                                size={18}
-                                color={SOS_BLUEGREEN}
+                            <Image
+                                source={require("@/assets/images/ICON-contacto.webp")}
+                                style={{ width: 24, height: 24 }}
                             />
                         </View>
-                        <Text className="text-sm tracking-widest uppercase font-poppins-bold text-sos-gray dark:text-gray-400">
-                            Contacto
+                        <Text
+                            numberOfLines={1}
+                            className="text-sm tracking-widest uppercase font-poppins-bold text-sos-gray dark:text-gray-400"
+                        >
+                            Información de contacto
                         </Text>
                     </View>
 
                     <View style={{ gap: 20 }}>
                         {/* ── telefono (read-only, verified) ──────── */}
                         <View style={{ gap: 6 }}>
-                            <View className="flex-row justify-between items-center">
-                                <Text className="text-sm text-gray-900 font-poppins-bold dark:text-gray-200">
+                            <View className="flex-row items-center justify-between">
+                                <Text className="text-base font-poppins-bold text-sos-gray dark:text-gray-300">
                                     Teléfono
                                 </Text>
                                 <View
@@ -606,11 +588,10 @@ export default function VerifyAccountInfoScreen() {
                                 </View>
                             </View>
                             <View className="relative">
-                                <View className="absolute top-0 bottom-0 left-4 z-10 justify-center">
-                                    <MaterialIcons
-                                        name="phone"
-                                        size={20}
-                                        color="#9ca3af"
+                                <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
+                                    <Image
+                                        source={require("@/assets/images/ICON-telefono.webp")}
+                                        style={{ width: 24, height: 24 }}
                                     />
                                 </View>
                                 <TextInput
@@ -620,7 +601,7 @@ export default function VerifyAccountInfoScreen() {
                                     className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-[#1A262B] text-gray-500 dark:text-gray-400 text-base font-sans"
                                     style={{
                                         paddingVertical: 14,
-                                        paddingLeft: 44,
+                                        paddingLeft: 52,
                                         paddingRight: 16,
                                         opacity: 0.7,
                                     }}
@@ -634,22 +615,21 @@ export default function VerifyAccountInfoScreen() {
 
                         {/* ── correo (optional) ──────────────────── */}
                         <View style={{ gap: 6 }}>
-                            <Text className="text-sm text-gray-900 font-poppins-bold dark:text-gray-200">
+                            <Text className="text-base font-poppins-bold text-sos-gray dark:text-gray-300">
                                 Correo electrónico{" "}
                                 <Text className="text-xs font-poppins-medium text-sos-gray dark:text-gray-500">
                                     (opcional)
                                 </Text>
                             </Text>
                             <View className="relative">
-                                <View className="absolute top-0 bottom-0 left-4 z-10 justify-center">
-                                    <MaterialIcons
-                                        name="email"
-                                        size={20}
-                                        color={
-                                            noTengoCorreo
-                                                ? "#d1d5db"
-                                                : "#9ca3af"
-                                        }
+                                <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
+                                    <Image
+                                        source={require("@/assets/images/ICON-email.webp")}
+                                        style={{
+                                            width: 24,
+                                            height: 24,
+                                            opacity: noTengoCorreo ? 0.45 : 1,
+                                        }}
                                     />
                                 </View>
                                 <TextInput
@@ -675,7 +655,7 @@ export default function VerifyAccountInfoScreen() {
                                     } text-gray-900 dark:text-sos-white text-base font-sans`}
                                     style={{
                                         paddingVertical: 14,
-                                        paddingLeft: 44,
+                                        paddingLeft: 52,
                                         paddingRight: 16,
                                         opacity: noTengoCorreo ? 0.5 : 1,
                                     }}
@@ -744,39 +724,13 @@ export default function VerifyAccountInfoScreen() {
                         : "rgba(255, 255, 255, 0.9)",
                 }}
             >
-                <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-                    <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Finalizar registro"
-                        accessibilityState={{ disabled: isSubmitting }}
-                        onPress={handleSubmit}
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
-                        disabled={isSubmitting}
-                        className={`flex-row justify-center items-center w-full h-14 rounded-full bg-sos-bluegreen active:opacity-90 ${
-                            isSubmitting ? "opacity-70" : ""
-                        }`}
-                        style={{
-                            shadowColor: SOS_BLUEGREEN,
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.39,
-                            shadowRadius: 14,
-                            elevation: 6,
-                        }}
-                    >
-                        <MaterialIcons
-                            name="check-circle"
-                            size={20}
-                            color="#ffffff"
-                            style={{ marginRight: 8 }}
-                        />
-                        <Text className="text-base font-poppins-bold text-sos-white">
-                            {isSubmitting
-                                ? "Guardando..."
-                                : "Finalizar registro"}
-                        </Text>
-                    </Pressable>
-                </Animated.View>
+                <SOSButton
+                    label="Finalizar registro"
+                    loading={isSubmitting}
+                    loadingLabel="Guardando..."
+                    accessibilityLabel="Finalizar registro"
+                    onPress={handleSubmit}
+                />
             </View>
         </SafeAreaView>
     );
