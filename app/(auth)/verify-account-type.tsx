@@ -2,10 +2,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Pressable, Text, useColorScheme, View } from "react-native";
+import { Image, Pressable, Text, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import TopAppBar from "@/components/auth/TopAppBar";
+import SOSButton from "@/components/shared/SOSButton";
 
 // ─── Constants ─────────────────────────────────────────────
 // Storage key — follows the same AsyncStorage pattern used in verify-company
@@ -21,10 +22,7 @@ interface MemberTypeOption {
     value: ParentescoType;
     label: string;
     subtitle: string;
-    icon: keyof typeof MaterialIcons.glyphMap;
-    iconBgLight: string;
-    iconBgDark: string;
-    iconColor: string;
+    iconSource: any;
 }
 
 // ─── Card data ─────────────────────────────────────────────
@@ -33,37 +31,25 @@ const MEMBER_TYPES: MemberTypeOption[] = [
         value: "titular",
         label: "Titular",
         subtitle: "Trabajador/a de la empresa",
-        icon: "badge",
-        iconBgLight: "#eff6ff", // Tailwind blue-50
-        iconBgDark: "rgba(30, 58, 138, 0.3)", // Tailwind blue-900/30
-        iconColor: SOS_BLUEGREEN,
+        iconSource: require("../../assets/images/ICON-titular.webp"),
     },
     {
         value: "conyuge",
         label: "Cónyuge",
         subtitle: "Esposo/a o pareja",
-        icon: "favorite",
-        iconBgLight: "#fef2f2", // Tailwind red-50
-        iconBgDark: "rgba(127, 29, 29, 0.3)", // Tailwind red-900/30
-        iconColor: "rgba(204, 51, 51, 0.8)", // sos-red at 80 % (primary/80)
+        iconSource: require("../../assets/images/ICON-conyuge.webp"),
     },
     {
         value: "hijo",
         label: "Dependiente",
         subtitle: "Hijo/a",
-        icon: "face",
-        iconBgLight: "#f0fdfa", // Tailwind teal-50
-        iconBgDark: "rgba(19, 78, 74, 0.3)", // Tailwind teal-900/30
-        iconColor: "#0d9488", // Tailwind teal-600
+        iconSource: require("../../assets/images/ICON-dependiente.webp"),
     },
     {
         value: "familiar",
         label: "Familiar",
         subtitle: "Padre, madre, tío/a u otro pariente",
-        icon: "groups",
-        iconBgLight: "#fefce8", // Tailwind yellow-50
-        iconBgDark: "rgba(113, 63, 18, 0.3)", // Tailwind yellow-900/30
-        iconColor: "#ca8a04", // Tailwind yellow-600
+        iconSource: require("../../assets/images/ICON-familiar.webp"),
     },
 ];
 
@@ -116,7 +102,7 @@ export default function VerifyAccountTypeScreen() {
             {/* ── Main Content ────────────────────────────────── */}
             <View className="flex-1 px-6 pt-2 pb-8">
                 {/* Title */}
-                <Text className="text-[28px] font-poppins-bold leading-tight text-gray-900 dark:text-sos-white mb-3">
+                <Text className="mb-3 text-3xl leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                     Tipo de miembro
                 </Text>
 
@@ -142,53 +128,34 @@ export default function VerifyAccountTypeScreen() {
                                 accessibilityState={{ checked: isSelected }}
                                 accessibilityLabel={`${type.label}: ${type.subtitle}`}
                                 onPress={() => setSelectedType(type.value)}
-                                className={`flex-row items-center p-4 pr-5 rounded-2xl border-2 ${
+                                className={`flex-row items-center p-5 rounded-2xl ${
                                     isSelected
-                                        ? "border-sos-bluegreen"
-                                        : "border-transparent"
+                                        ? "border-2 border-sos-bluegreen bg-white dark:bg-[#1a2634]"
+                                        : "border border-gray-200 dark:border-gray-700 bg-[#F5F7FA] dark:bg-[#151f2b]"
                                 }`}
-                                style={[
-                                    {
-                                        backgroundColor: isSelected
-                                            ? isDark
-                                                ? "rgba(0, 102, 204, 0.06)"
-                                                : "rgba(0, 102, 204, 0.03)"
-                                            : isDark
-                                              ? "#151f2b"
-                                              : "#ffffff",
-                                    },
-                                    {
-                                        // shadow-soft equivalent
-                                        shadowColor: "#000000",
-                                        shadowOffset: { width: 0, height: 4 },
-                                        shadowOpacity: isSelected ? 0.08 : 0.05,
-                                        shadowRadius: isSelected ? 12 : 10,
-                                        elevation: isSelected ? 4 : 2,
-                                    },
-                                ]}
+                                style={{
+                                    shadowColor: "#000000",
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.05,
+                                    shadowRadius: 8,
+                                    elevation: 2,
+                                }}
                             >
                                 {/* Icon Container */}
-                                <View
-                                    className="justify-center items-center w-12 h-12 rounded-xl"
-                                    style={{
-                                        backgroundColor: isDark
-                                            ? type.iconBgDark
-                                            : type.iconBgLight,
-                                    }}
-                                >
-                                    <MaterialIcons
-                                        name={type.icon}
-                                        size={24}
-                                        color={type.iconColor}
+                                <View className="justify-center items-center w-14 h-14 rounded-full bg-[#E8F1FA] dark:bg-[#1a2634]">
+                                    <Image
+                                        source={type.iconSource}
+                                        className="w-10 h-10"
+                                        resizeMode="contain"
                                     />
                                 </View>
 
                                 {/* Text */}
                                 <View className="flex-1 ml-4">
-                                    <Text className="text-lg text-gray-900 font-poppins-semibold dark:text-sos-white">
+                                    <Text className="text-lg text-gray-900 font-poppins-bold dark:text-sos-white">
                                         {type.label}
                                     </Text>
-                                    <Text className="text-xs font-poppins-medium text-sos-gray dark:text-gray-400 mt-0.5">
+                                    <Text className="text-sm font-poppins-regular text-sos-gray dark:text-gray-400 mt-0.5">
                                         {type.subtitle}
                                     </Text>
                                 </View>
@@ -216,31 +183,12 @@ export default function VerifyAccountTypeScreen() {
             </View>
 
             {/* ── Bottom Sticky CTA ───────────────────────────── */}
-            <View
-                className="p-6 pb-8 border-t border-gray-100 dark:border-gray-800"
-                style={{
-                    backgroundColor: isDark
-                        ? "rgba(16, 24, 34, 0.9)"
-                        : "rgba(255, 255, 255, 0.9)",
-                }}
-            >
-                <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Continuar al siguiente paso"
+            <View className="p-6 pb-8 border-t border-gray-100 dark:border-gray-800">
+                <SOSButton
+                    label="Continuar"
                     onPress={handleContinue}
-                    className="flex-row justify-center items-center w-full h-14 rounded-full bg-sos-bluegreen active:opacity-90"
-                    style={{
-                        shadowColor: SOS_BLUEGREEN,
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.39,
-                        shadowRadius: 14,
-                        elevation: 6,
-                    }}
-                >
-                    <Text className="text-base font-poppins-bold text-sos-white">
-                        Continuar
-                    </Text>
-                </Pressable>
+                    accessibilityLabel="Continuar al siguiente paso"
+                />
             </View>
         </SafeAreaView>
     );
