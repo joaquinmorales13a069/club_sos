@@ -141,7 +141,7 @@ export default function VerifyCompanyScreen() {
                 {/* Main content */}
                 <View className="flex-1 px-4">
                     {/* Headline */}
-                    <Text className="text-[32px] font-poppins-bold leading-tight tracking-tight text-left pb-2 pt-2 text-sos-bluegreen dark:text-sos-white">
+                    <Text className="pt-2 pb-2 text-3xl leading-tight tracking-tight text-left font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                         Vincula tu empresa
                     </Text>
 

@@ -273,7 +273,7 @@ export default function VerifyAccountInfoScreen() {
             >
                 {/* Title + Description */}
                 <View className="mb-8">
-                    <Text className="mb-2 text-2xl leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
+                    <Text className="mb-2 text-3xl leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                         Información personal
                     </Text>
                     <Text className="font-sans text-base leading-relaxed text-sos-gray dark:text-gray-300">
@@ -331,7 +331,7 @@ export default function VerifyAccountInfoScreen() {
                                 <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
                                     <Image
                                         source={require("@/assets/images/ICON-titular.webp")}
-                                        style={{ width: 20, height: 20 }}
+                                        style={{ width: 22, height: 22 }}
                                     />
                                 </View>
                                 <TextInput
@@ -375,7 +375,7 @@ export default function VerifyAccountInfoScreen() {
                                 <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
                                     <Image
                                         source={require("@/assets/images/ICON-id.webp")}
-                                        style={{ width: 20, height: 20 }}
+                                        style={{ width: 22, height: 22 }}
                                     />
                                 </View>
                                 <TextInput
@@ -419,7 +419,7 @@ export default function VerifyAccountInfoScreen() {
                                 <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
                                     <Image
                                         source={require("@/assets/images/ICON-calendario.webp")}
-                                        style={{ width: 20, height: 20 }}
+                                        style={{ width: 22, height: 22 }}
                                     />
                                 </View>
                                 <TextInput
@@ -591,7 +591,7 @@ export default function VerifyAccountInfoScreen() {
                                 <View className="absolute top-0 bottom-0 z-10 justify-center left-4">
                                     <Image
                                         source={require("@/assets/images/ICON-telefono.webp")}
-                                        style={{ width: 24, height: 24 }}
+                                        style={{ width: 22, height: 22 }}
                                     />
                                 </View>
                                 <TextInput
@@ -626,8 +626,8 @@ export default function VerifyAccountInfoScreen() {
                                     <Image
                                         source={require("@/assets/images/ICON-email.webp")}
                                         style={{
-                                            width: 24,
-                                            height: 24,
+                                            width: 22,
+                                            height: 22,
                                             opacity: noTengoCorreo ? 0.45 : 1,
                                         }}
                                     />

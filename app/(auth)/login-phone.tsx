@@ -143,7 +143,7 @@ export default function LoginPhoneScreen() {
                 <View className="flex-1 px-4">
                     {/* Headline */}
                     <View className="pt-2 pb-6">
-                        <Text className="text-[32px] font-poppins-bold leading-tight tracking-tight text-sos-bluegreen dark:text-sos-white text-left">
+                        <Text className="text-3xl leading-tight tracking-tight text-left font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                             Inicia sesión
                         </Text>
                         <Text className="mt-2 font-sans text-base text-sos-gray dark:text-gray-400">

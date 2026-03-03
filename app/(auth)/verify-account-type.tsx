@@ -102,7 +102,7 @@ export default function VerifyAccountTypeScreen() {
             {/* ── Main Content ────────────────────────────────── */}
             <View className="flex-1 px-6 pt-2 pb-8">
                 {/* Title */}
-                <Text className="text-[28px] font-poppins-bold leading-tight text-sos-bluegreen dark:text-sos-white mb-3">
+                <Text className="mb-3 text-3xl leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                     Tipo de miembro
                 </Text>
 

@@ -184,7 +184,7 @@ export default function LinkMainAccountScreen() {
             >
                 {/* Title + Description */}
                 <View className="mb-8">
-                    <Text className="mb-2 text-2xl leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
+                    <Text className="mb-2 text-3xl leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                         Busca al titular
                     </Text>
                     <Text className="font-sans text-base leading-relaxed text-sos-gray dark:text-gray-300">
