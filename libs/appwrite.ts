@@ -1,5 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Account, Client, Databases, ID, Query, Storage } from "react-native-appwrite";
+import {
+    Account,
+    Client,
+    Databases,
+    Functions,
+    ID,
+    Query,
+} from "react-native-appwrite";
 import type { BeneficioData, DocumentoMedico } from "../type";
 
 export const appwriteConfig = {
@@ -11,7 +18,8 @@ export const appwriteConfig = {
     empresasId: process.env.EXPO_PUBLIC_APPWRITE_EMPRESAS_ID,
     beneficiosId: process.env.EXPO_PUBLIC_APPWRITE_BENEFICIOS_ID,
     documentosMedicosId: process.env.EXPO_PUBLIC_APPWRITE_DOCUMENTOS_MEDICOS_ID,
-    storageDocumentosId: process.env.EXPO_PUBLIC_APPWRITE_STORAGE_DOCUMENTOS_ID,
+    getDocumentTokenFnId:
+        process.env.EXPO_PUBLIC_APPWRITE_GET_DOCUMENT_TOKEN_FN,
 };
 
 export const client = new Client();
@@ -24,7 +32,31 @@ client
 
 export const account = new Account(client);
 export const databases = new Databases(client);
-export const storage = new Storage(client);
+const functions = new Functions(client);
+
+// Normaliza la respuesta de la función para garantizar que siempre escribimos
+// un base64 limpio, sin prefijos data URI y con padding correcto.
+const normalizeBase64Payload = (value: string): string => {
+    const trimmedValue = value.trim();
+    const rawBase64 = trimmedValue.startsWith("data:")
+        ? trimmedValue.slice(trimmedValue.indexOf(",") + 1)
+        : trimmedValue;
+
+    const sanitizedBase64 = rawBase64
+        .replace(/\s+/g, "")
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+
+    const remainder = sanitizedBase64.length % 4;
+    if (remainder === 0) {
+        return sanitizedBase64;
+    }
+
+    return sanitizedBase64.padEnd(
+        sanitizedBase64.length + (4 - remainder),
+        "=",
+    );
+};
 
 /**
  * Send OTP via SMS to the specified phone number
@@ -567,12 +599,10 @@ export const getParientesByTitularId = async (titularId: string) => {
 // ─── Documentos Médicos ──────────────────────────────────────
 
 /**
- * Fetch all active medical documents for a given miembro.
- * Queries the `documentos_medicos` collection filtering by miembro_id
- * and estado_archivo = 'activo', ordered by fecha_documento descending.
+ * Obtiene los documentos médicos activos de un miembro y los ordena por fecha.
  *
- * @param miembroId - The miembro document $id
- * @returns Array of DocumentoMedico documents
+ * @param miembroId - El $id del documento del miembro
+ * @returns Lista de documentos médicos activos
  */
 export const getDocumentosByMiembro = async (
     miembroId: string,
@@ -598,54 +628,47 @@ export const getDocumentosByMiembro = async (
 };
 
 /**
- * Build an authenticated view URL for a storage file.
- * Creates a short-lived JWT and appends it to the file view URL
- * so the member can open the file without exposing session cookies.
+ * Ejecuta la función de Appwrite que valida propiedad del archivo y devuelve
+ * su contenido codificado en base64.
  *
- * @param fileId - The Appwrite Storage file $id
- * @returns Authenticated URL string for viewing the file
+ * Nota: el nombre del env var conserva la referencia histórica a "token",
+ * pero el resultado real que consume la app es el contenido en base64.
+ *
+ * @param fileId - El $id del archivo en Storage
+ * @returns Contenido del archivo en base64 listo para escribir en caché
  */
-export const getDocumentoFileUrl = async (fileId: string): Promise<string> => {
+export const getDocumentoBase64 = async (fileId: string): Promise<string> => {
     try {
-        const jwt = await account.createJWT();
-        const url = storage.getFileView({
-            bucketId: appwriteConfig.storageDocumentosId!,
-            fileId,
+        const execution = await functions.createExecution({
+            functionId: appwriteConfig.getDocumentTokenFnId!,
+            body: JSON.stringify({ fileId }),
+            async: false,
         });
 
-        return `${url.toString()}&jwt=${jwt.jwt}`;
-    } catch (error) {
-        if (error instanceof Error) {
-            throw new Error(error.message);
-        }
-        throw new Error("Error al obtener la URL del documento");
-    }
-};
+        let result: { base64?: string; error?: string };
+        try {
+            result = JSON.parse(execution.responseBody);
+        } catch {
+            if (
+                execution.responseStatusCode === 200 && execution.responseBody
+            ) {
+                return normalizeBase64Payload(execution.responseBody);
+            }
 
-/**
- * Build an authenticated download URL for a storage file.
- * Creates a short-lived JWT and appends it to the file download URL
- * so expo-file-system can fetch the file with proper authentication.
- *
- * @param fileId - The Appwrite Storage file $id
- * @returns Authenticated URL string for downloading the file
- */
-export const getDocumentoDownloadUrl = async (
-    fileId: string,
-): Promise<string> => {
-    try {
-        const jwt = await account.createJWT();
-        const url = storage.getFileDownload({
-            bucketId: appwriteConfig.storageDocumentosId!,
-            fileId,
-        });
-
-        return `${url.toString()}&jwt=${jwt.jwt}`;
-    } catch (error) {
-        if (error instanceof Error) {
-            throw new Error(error.message);
+            throw new Error(
+                `Error en la función (HTTP ${execution.responseStatusCode})`,
+            );
         }
-        throw new Error("Error al obtener la URL de descarga");
+
+        if (execution.responseStatusCode !== 200) {
+            throw new Error(result.error ?? "No se pudo obtener el documento");
+        }
+
+        if (!result.base64) throw new Error("Contenido no disponible");
+        return normalizeBase64Payload(result.base64);
+    } catch (error) {
+        if (error instanceof Error) throw new Error(error.message);
+        throw new Error("Error al obtener acceso al documento");
     }
 };
 

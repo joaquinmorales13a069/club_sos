@@ -28,7 +28,7 @@
     },
     "plugins": [
       "expo-router",
-      "expo-web-browser"
+      "expo-media-library"
     ],
     "experiments": {
       "typedRoutes": true,
