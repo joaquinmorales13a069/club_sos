@@ -22,8 +22,6 @@ import {
     saveMiembroDraft,
 } from "@/libs/appwrite";
 
-// Brand colour constants for inline style props (RN icon / shadow limitation)
-const SOS_RED = "#CC3333";
 
 // ─── Progress Config ────────────────────────────────────────
 // Onboarding flow: 1 = verify-company, 2 = verify-account-type,
