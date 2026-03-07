@@ -26,6 +26,7 @@ export interface BeneficioData {
     estado_beneficio: EstadoBeneficio;
     creado_por: string;
     tipo_beneficio: TipoBeneficio | null;
+    beneficio_image_url?: string | null;
 }
 
 // ─── Perfil Screen Types ────────────────────────────────────
