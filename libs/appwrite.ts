@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Account, Client, Databases, ID, Query } from "react-native-appwrite";
-import type { BeneficioData } from "../type";
+import { Account, Client, Databases, ID, Query, Storage } from "react-native-appwrite";
+import type { BeneficioData, DocumentoMedico } from "../type";
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -10,6 +10,8 @@ export const appwriteConfig = {
     miembrosId: process.env.EXPO_PUBLIC_APPWRITE_MIEMBROS_ID,
     empresasId: process.env.EXPO_PUBLIC_APPWRITE_EMPRESAS_ID,
     beneficiosId: process.env.EXPO_PUBLIC_APPWRITE_BENEFICIOS_ID,
+    documentosMedicosId: process.env.EXPO_PUBLIC_APPWRITE_DOCUMENTOS_MEDICOS_ID,
+    storageDocumentosId: process.env.EXPO_PUBLIC_APPWRITE_STORAGE_DOCUMENTOS_ID,
 };
 
 export const client = new Client();
@@ -22,6 +24,7 @@ client
 
 export const account = new Account(client);
 export const databases = new Databases(client);
+export const storage = new Storage(client);
 
 /**
  * Send OTP via SMS to the specified phone number
@@ -558,6 +561,91 @@ export const getParientesByTitularId = async (titularId: string) => {
             throw new Error(error.message);
         }
         throw new Error("Error al obtener los parientes");
+    }
+};
+
+// ─── Documentos Médicos ──────────────────────────────────────
+
+/**
+ * Fetch all active medical documents for a given miembro.
+ * Queries the `documentos_medicos` collection filtering by miembro_id
+ * and estado_archivo = 'activo', ordered by fecha_documento descending.
+ *
+ * @param miembroId - The miembro document $id
+ * @returns Array of DocumentoMedico documents
+ */
+export const getDocumentosByMiembro = async (
+    miembroId: string,
+): Promise<DocumentoMedico[]> => {
+    try {
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.documentosMedicosId!,
+            queries: [
+                Query.equal("miembro_id", miembroId),
+                Query.equal("estado_archivo", "activo"),
+                Query.orderDesc("fecha_documento"),
+            ],
+        });
+
+        return response.documents as unknown as DocumentoMedico[];
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener los documentos médicos");
+    }
+};
+
+/**
+ * Build an authenticated view URL for a storage file.
+ * Creates a short-lived JWT and appends it to the file view URL
+ * so the member can open the file without exposing session cookies.
+ *
+ * @param fileId - The Appwrite Storage file $id
+ * @returns Authenticated URL string for viewing the file
+ */
+export const getDocumentoFileUrl = async (fileId: string): Promise<string> => {
+    try {
+        const jwt = await account.createJWT();
+        const url = storage.getFileView({
+            bucketId: appwriteConfig.storageDocumentosId!,
+            fileId,
+        });
+
+        return `${url.toString()}&jwt=${jwt.jwt}`;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener la URL del documento");
+    }
+};
+
+/**
+ * Build an authenticated download URL for a storage file.
+ * Creates a short-lived JWT and appends it to the file download URL
+ * so expo-file-system can fetch the file with proper authentication.
+ *
+ * @param fileId - The Appwrite Storage file $id
+ * @returns Authenticated URL string for downloading the file
+ */
+export const getDocumentoDownloadUrl = async (
+    fileId: string,
+): Promise<string> => {
+    try {
+        const jwt = await account.createJWT();
+        const url = storage.getFileDownload({
+            bucketId: appwriteConfig.storageDocumentosId!,
+            fileId,
+        });
+
+        return `${url.toString()}&jwt=${jwt.jwt}`;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener la URL de descarga");
     }
 };
 
