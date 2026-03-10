@@ -1,6 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Account, Client, Databases, ID, Query } from "react-native-appwrite";
-import type { BeneficioData } from "../type";
+import {
+    Account,
+    Client,
+    Databases,
+    Functions,
+    ID,
+    Query,
+} from "react-native-appwrite";
+import type { BeneficioData, DocumentoMedico } from "../type";
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -10,6 +17,9 @@ export const appwriteConfig = {
     miembrosId: process.env.EXPO_PUBLIC_APPWRITE_MIEMBROS_ID,
     empresasId: process.env.EXPO_PUBLIC_APPWRITE_EMPRESAS_ID,
     beneficiosId: process.env.EXPO_PUBLIC_APPWRITE_BENEFICIOS_ID,
+    documentosMedicosId: process.env.EXPO_PUBLIC_APPWRITE_DOCUMENTOS_MEDICOS_ID,
+    getDocumentTokenFnId:
+        process.env.EXPO_PUBLIC_APPWRITE_GET_DOCUMENT_TOKEN_FN,
 };
 
 export const client = new Client();
@@ -22,6 +32,31 @@ client
 
 export const account = new Account(client);
 export const databases = new Databases(client);
+const functions = new Functions(client);
+
+// Normaliza la respuesta de la función para garantizar que siempre escribimos
+// un base64 limpio, sin prefijos data URI y con padding correcto.
+const normalizeBase64Payload = (value: string): string => {
+    const trimmedValue = value.trim();
+    const rawBase64 = trimmedValue.startsWith("data:")
+        ? trimmedValue.slice(trimmedValue.indexOf(",") + 1)
+        : trimmedValue;
+
+    const sanitizedBase64 = rawBase64
+        .replace(/\s+/g, "")
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+
+    const remainder = sanitizedBase64.length % 4;
+    if (remainder === 0) {
+        return sanitizedBase64;
+    }
+
+    return sanitizedBase64.padEnd(
+        sanitizedBase64.length + (4 - remainder),
+        "=",
+    );
+};
 
 /**
  * Send OTP via SMS to the specified phone number
@@ -558,6 +593,82 @@ export const getParientesByTitularId = async (titularId: string) => {
             throw new Error(error.message);
         }
         throw new Error("Error al obtener los parientes");
+    }
+};
+
+// ─── Documentos Médicos ──────────────────────────────────────
+
+/**
+ * Obtiene los documentos médicos activos de un miembro y los ordena por fecha.
+ *
+ * @param miembroId - El $id del documento del miembro
+ * @returns Lista de documentos médicos activos
+ */
+export const getDocumentosByMiembro = async (
+    miembroId: string,
+): Promise<DocumentoMedico[]> => {
+    try {
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.documentosMedicosId!,
+            queries: [
+                Query.equal("miembro_id", miembroId),
+                Query.equal("estado_archivo", "activo"),
+                Query.orderDesc("fecha_documento"),
+            ],
+        });
+
+        return response.documents as unknown as DocumentoMedico[];
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(error.message);
+        }
+        throw new Error("Error al obtener los documentos médicos");
+    }
+};
+
+/**
+ * Ejecuta la función de Appwrite que valida propiedad del archivo y devuelve
+ * su contenido codificado en base64.
+ *
+ * Nota: el nombre del env var conserva la referencia histórica a "token",
+ * pero el resultado real que consume la app es el contenido en base64.
+ *
+ * @param fileId - El $id del archivo en Storage
+ * @returns Contenido del archivo en base64 listo para escribir en caché
+ */
+export const getDocumentoBase64 = async (fileId: string): Promise<string> => {
+    try {
+        const execution = await functions.createExecution({
+            functionId: appwriteConfig.getDocumentTokenFnId!,
+            body: JSON.stringify({ fileId }),
+            async: false,
+        });
+
+        let result: { base64?: string; error?: string };
+        try {
+            result = JSON.parse(execution.responseBody);
+        } catch {
+            if (
+                execution.responseStatusCode === 200 && execution.responseBody
+            ) {
+                return normalizeBase64Payload(execution.responseBody);
+            }
+
+            throw new Error(
+                `Error en la función (HTTP ${execution.responseStatusCode})`,
+            );
+        }
+
+        if (execution.responseStatusCode !== 200) {
+            throw new Error(result.error ?? "No se pudo obtener el documento");
+        }
+
+        if (!result.base64) throw new Error("Contenido no disponible");
+        return normalizeBase64Payload(result.base64);
+    } catch (error) {
+        if (error instanceof Error) throw new Error(error.message);
+        throw new Error("Error al obtener acceso al documento");
     }
 };
 

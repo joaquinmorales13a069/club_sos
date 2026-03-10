@@ -29,6 +29,33 @@ export interface BeneficioData {
     beneficio_image_url?: string | null;
 }
 
+// ─── Documentos Médicos Types ───────────────────────────────
+
+export type TipoDocumento =
+    | "laboratorio"
+    | "radiologia"
+    | "consulta_medica"
+    | "especialidades"
+    | "otro";
+
+export type TipoArchivo = "pdf" | "imagen";
+
+export type EstadoArchivo = "activo" | "eliminado";
+
+export interface DocumentoMedico {
+    $id: string;
+    miembro_id: string;
+    storage_archivo_id: string;
+    nombre_documento: string;
+    tipo_documento: TipoDocumento;
+    tipo_archivo: TipoArchivo;
+    fecha_documento: string;
+    estado_archivo: EstadoArchivo;
+    subido_por: string;
+    $createdAt: string;
+    $updatedAt: string;
+}
+
 // ─── Perfil Screen Types ────────────────────────────────────
 
 // Accordion types
