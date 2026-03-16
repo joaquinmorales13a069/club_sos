@@ -121,7 +121,7 @@ export default function CitasTabScreen() {
     if (loading) {
         return (
             <TabScreenView className="flex-1 bg-sos-white">
-                <View className="flex-1 items-center justify-center">
+                <View className="flex-1 justify-center items-center">
                     <ActivityIndicator
                         size="large"
                         color={THEME_COLORS.sosBluegreen}
@@ -138,13 +138,13 @@ export default function CitasTabScreen() {
     if (error) {
         return (
             <TabScreenView className="flex-1 bg-sos-white">
-                <View className="flex-1 items-center justify-center px-4">
+                <View className="flex-1 justify-center items-center px-4">
                     <Text className="text-base text-center text-red-600 font-poppins-medium">
                         {error}
                     </Text>
                     <Pressable
                         onPress={() => loadCitas(true)}
-                        className="mt-4 px-6 py-3 rounded-xl bg-sos-bluegreen"
+                        className="px-6 py-3 mt-4 rounded-xl bg-sos-bluegreen"
                     >
                         <Text className="text-sm text-sos-white font-poppins-semibold">
                             Reintentar
@@ -165,7 +165,7 @@ export default function CitasTabScreen() {
             >
                 <View className="pt-6">
                     {/* Header */}
-                    <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row justify-between items-center mb-4">
                         <Text className="text-2xl text-sos-bluegreen font-poppins-bold">
                             Mis Citas
                         </Text>
@@ -173,7 +173,7 @@ export default function CitasTabScreen() {
                             onPress={handleAgendar}
                             accessibilityRole="button"
                             accessibilityLabel="Agendar cita"
-                            className="flex-row items-center gap-1 px-3 py-2 rounded-xl bg-sos-bluegreen"
+                            className="flex-row gap-1 items-center px-3 py-2 rounded-xl bg-sos-bluegreen"
                         >
                             <MaterialIcons
                                 name="add"
@@ -188,7 +188,7 @@ export default function CitasTabScreen() {
 
                     {/* Lista o estado vacío */}
                     {citas.length === 0 ? (
-                        <View className="items-center px-4 py-12 rounded-2xl bg-gray-50">
+                        <View className="items-center px-4 py-12 bg-gray-50 rounded-2xl">
                             <MaterialIcons
                                 name="event-busy"
                                 size={48}
@@ -198,7 +198,7 @@ export default function CitasTabScreen() {
                                 Sin citas programadas
                             </Text>
                             <Text className="mt-1 text-sm text-center text-sos-gray font-poppins-medium">
-                                Presiona "Agendar" para reservar tu primera cita médica.
+                                Presiona &quot;Agendar&quot; para reservar tu primera cita médica.
                             </Text>
                         </View>
                     ) : (
