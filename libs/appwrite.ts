@@ -7,7 +7,7 @@ import {
     ID,
     Query,
 } from "react-native-appwrite";
-import type { BeneficioData, DocumentoMedico } from "../type";
+import type { BeneficioData, Cita, Doctor, DocumentoMedico, Servicio } from "../type";
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -18,8 +18,10 @@ export const appwriteConfig = {
     empresasId: process.env.EXPO_PUBLIC_APPWRITE_EMPRESAS_ID,
     beneficiosId: process.env.EXPO_PUBLIC_APPWRITE_BENEFICIOS_ID,
     documentosMedicosId: process.env.EXPO_PUBLIC_APPWRITE_DOCUMENTOS_MEDICOS_ID,
-    getDocumentTokenFnId:
-        process.env.EXPO_PUBLIC_APPWRITE_GET_DOCUMENT_TOKEN_FN,
+    getDocumentTokenFnId: process.env.EXPO_PUBLIC_APPWRITE_GET_DOCUMENT_TOKEN_FN,
+    citasId: process.env.EXPO_PUBLIC_APPWRITE_CITAS_ID,
+    serviciosId: process.env.EXPO_PUBLIC_APPWRITE_SERVICIOS_ID,
+    doctoresId: process.env.EXPO_PUBLIC_APPWRITE_DOCTORES_ID,
 };
 
 export const client = new Client();
@@ -669,6 +671,96 @@ export const getDocumentoBase64 = async (fileId: string): Promise<string> => {
     } catch (error) {
         if (error instanceof Error) throw new Error(error.message);
         throw new Error("Error al obtener acceso al documento");
+    }
+};
+
+// ─── Citas ───────────────────────────────────────────────
+
+/**
+ * Obtiene las citas de un miembro ordenadas por fecha ascendente
+ * (la próxima cita aparece primera).
+ */
+export const getCitasByMiembro = async (miembroId: string): Promise<Cita[]> => {
+    try {
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.citasId!,
+            queries: [
+                Query.equal("miembro_id", miembroId),
+                Query.orderAsc("fecha_hora_cita"),
+            ],
+        });
+        return response.documents as unknown as Cita[];
+    } catch (error) {
+        if (error instanceof Error) throw new Error(error.message);
+        throw new Error("Error al obtener las citas");
+    }
+};
+
+// ─── Servicios ───────────────────────────────────────────
+
+/**
+ * Obtiene los servicios filtrados por ubicación (ea_category_id).
+ * 1 = Managua, 2 = León.
+ */
+export const getServiciosByCategoria = async (
+    categoriaId: number,
+): Promise<Servicio[]> => {
+    try {
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.serviciosId!,
+            queries: [
+                Query.equal("ea_category_id", categoriaId),
+                Query.orderAsc("nombre"),
+            ],
+        });
+        return response.documents as unknown as Servicio[];
+    } catch (error) {
+        if (error instanceof Error) throw new Error(error.message);
+        throw new Error("Error al obtener los servicios");
+    }
+};
+
+/**
+ * Obtiene servicios por sus ea_ids (para mostrar nombres en la lista de citas).
+ */
+export const getServiciosByEaIds = async (
+    eaIds: number[],
+): Promise<Servicio[]> => {
+    try {
+        if (eaIds.length === 0) return [];
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.serviciosId!,
+            queries: [Query.equal("ea_id", eaIds)],
+        });
+        return response.documents as unknown as Servicio[];
+    } catch (error) {
+        if (error instanceof Error) throw new Error(error.message);
+        throw new Error("Error al obtener los servicios");
+    }
+};
+
+// ─── Doctores ────────────────────────────────────────────
+
+/**
+ * Obtiene doctores por sus ea_ids (para mostrar nombres en la lista de citas).
+ */
+export const getDoctoresByEaIds = async (
+    eaIds: number[],
+): Promise<Doctor[]> => {
+    try {
+        if (eaIds.length === 0) return [];
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.doctoresId!,
+            queries: [Query.equal("ea_id", eaIds)],
+        });
+        return response.documents as unknown as Doctor[];
+    } catch (error) {
+        if (error instanceof Error) throw new Error(error.message);
+        throw new Error("Error al obtener los doctores");
     }
 };
 

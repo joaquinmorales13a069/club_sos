@@ -56,6 +56,53 @@ export interface DocumentoMedico {
     $updatedAt: string;
 }
 
+// ─── Citas Types ─────────────────────────────────────────────
+
+export type EstadoSync = "pendiente" | "sincronizado" | "fallido";
+
+export interface Cita {
+    $id: string;
+    miembro_id: string;
+    empresa_id: string;
+    fecha_hora_cita: string;
+    motivo_cita: string | null;
+    ea_service_id: string;
+    ea_provider_id: string;
+    ea_customer_id: string;
+    estado_sync: EstadoSync;
+    ea_appointment_id: string | null;
+    para_titular: boolean;
+    paciente_nombre: string;
+    paciente_telefono: string | null;
+    paciente_correo: string | null;
+    paciente_cedula: string | null;
+    $createdAt: string;
+    $updatedAt: string;
+}
+
+export interface Servicio {
+    $id: string;
+    ea_id: number;
+    nombre: string;
+    duracion: number;
+    precio: number;
+    moneda: string;
+    descripcion: string | null;
+    ubicacion: string | null;
+    ea_category_id: number;
+}
+
+export interface Doctor {
+    $id: string;
+    ea_id: number;
+    nombres: string;
+    apellidos: string;
+    email: string;
+    telefono: string;
+    ea_servicios: string[];
+    activo: boolean;
+}
+
 // ─── Perfil Screen Types ────────────────────────────────────
 
 // Accordion types
