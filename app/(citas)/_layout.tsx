@@ -5,6 +5,9 @@ export default function CitasFlowLayout() {
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="ubicacion" />
             <Stack.Screen name="servicio" />
+            <Stack.Screen name="doctor" />
+            <Stack.Screen name="fecha" />
+            <Stack.Screen name="horario" />
         </Stack>
     );
 }

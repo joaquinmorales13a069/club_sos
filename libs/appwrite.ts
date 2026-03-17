@@ -764,6 +764,32 @@ export const getDoctoresByEaIds = async (
     }
 };
 
+/**
+ * Obtiene los doctores activos que ofrecen un servicio específico.
+ * Filtra por ea_servicios que contenga el ea_id del servicio (como string).
+ *
+ * @param eaServiceId - El ea_id del servicio seleccionado
+ */
+export const getDoctoresByServicioEaId = async (
+    eaServiceId: number,
+): Promise<Doctor[]> => {
+    try {
+        const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId!,
+            collectionId: appwriteConfig.doctoresId!,
+            queries: [
+                Query.contains("ea_servicios", String(eaServiceId)),
+                Query.equal("activo", true),
+                Query.orderAsc("apellidos"),
+            ],
+        });
+        return response.documents as unknown as Doctor[];
+    } catch (error) {
+        if (error instanceof Error) throw new Error(error.message);
+        throw new Error("Error al obtener los doctores");
+    }
+};
+
 // ─── Perfil ──────────────────────────────────────────────
 
 /**

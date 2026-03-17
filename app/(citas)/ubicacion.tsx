@@ -40,7 +40,7 @@ export default function UbicacionScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-sos-white">
+        <SafeAreaView className="flex-1 bg-sos-white dark:bg-[#101822]">
             <TopAppBar
                 onBack={() => router.back()}
                 currentStep={1}
@@ -49,10 +49,10 @@ export default function UbicacionScreen() {
 
             <View className="flex-1 px-4">
                 {/* Título */}
-                <Text className="pt-2 pb-1 text-3xl leading-tight tracking-tight font-poppins-bold text-sos-bluegreen">
-                    Selecciona la sede
+                <Text className="pt-2 pb-1 text-3xl tracking-tight leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
+                    Selecciona la clínica
                 </Text>
-                <Text className="pb-8 text-base leading-normal text-sos-gray">
+                <Text className="pb-8 text-base leading-normal text-sos-gray dark:text-gray-400">
                     ¿En qué ubicación deseas tu cita médica?
                 </Text>
 
@@ -66,9 +66,9 @@ export default function UbicacionScreen() {
                             accessibilityLabel={`Seleccionar ${ubicacion.nombre}`}
                             className="active:opacity-80"
                         >
-                            <View className="flex-row items-center gap-4 p-5 rounded-2xl border border-gray-200 bg-white shadow-sm">
+                            <View className="flex-row items-center gap-4 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#151f2b] shadow-sm">
                                 {/* Icono */}
-                                <View className="w-14 h-14 rounded-xl bg-sos-bluegreen/10 items-center justify-center">
+                                <View className="justify-center items-center w-14 h-14 rounded-xl bg-sos-bluegreen/10">
                                     <MaterialIcons
                                         name={ubicacion.icon}
                                         size={28}
@@ -78,10 +78,10 @@ export default function UbicacionScreen() {
 
                                 {/* Texto */}
                                 <View className="flex-1">
-                                    <Text className="text-lg text-gray-900 font-poppins-bold">
+                                    <Text className="text-lg text-gray-900 dark:text-sos-white font-poppins-bold">
                                         {ubicacion.nombre}
                                     </Text>
-                                    <Text className="text-sm text-sos-gray font-poppins-medium">
+                                    <Text className="text-sm text-sos-gray dark:text-gray-400 font-poppins-medium">
                                         {ubicacion.descripcion}
                                     </Text>
                                 </View>

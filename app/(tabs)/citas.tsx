@@ -120,13 +120,13 @@ export default function CitasTabScreen() {
     // ─── Loading ─────────────────────────────────────────────
     if (loading) {
         return (
-            <TabScreenView className="flex-1 bg-sos-white">
+            <TabScreenView className="flex-1 bg-sos-white dark:bg-[#101822]">
                 <View className="flex-1 justify-center items-center">
                     <ActivityIndicator
                         size="large"
                         color={THEME_COLORS.sosBluegreen}
                     />
-                    <Text className="mt-4 text-sm text-sos-gray font-poppins-medium">
+                    <Text className="mt-4 text-sm text-sos-gray dark:text-gray-400 font-poppins-medium">
                         Cargando citas...
                     </Text>
                 </View>
@@ -137,9 +137,9 @@ export default function CitasTabScreen() {
     // ─── Error ───────────────────────────────────────────────
     if (error) {
         return (
-            <TabScreenView className="flex-1 bg-sos-white">
+            <TabScreenView className="flex-1 bg-sos-white dark:bg-[#101822]">
                 <View className="flex-1 justify-center items-center px-4">
-                    <Text className="text-base text-center text-red-600 font-poppins-medium">
+                    <Text className="text-base text-center text-red-600 dark:text-red-400 font-poppins-medium">
                         {error}
                     </Text>
                     <Pressable
@@ -157,7 +157,7 @@ export default function CitasTabScreen() {
 
     // ─── Render ──────────────────────────────────────────────
     return (
-        <TabScreenView className="flex-1 bg-sos-white">
+        <TabScreenView className="flex-1 bg-sos-white dark:bg-[#101822]">
             <TabScrollView
                 className="flex-1"
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
@@ -166,7 +166,7 @@ export default function CitasTabScreen() {
                 <View className="pt-6">
                     {/* Header */}
                     <View className="flex-row justify-between items-center mb-4">
-                        <Text className="text-2xl text-sos-bluegreen font-poppins-bold">
+                        <Text className="text-2xl text-sos-bluegreen dark:text-sos-white font-poppins-bold">
                             Mis Citas
                         </Text>
                         <Pressable
@@ -188,16 +188,16 @@ export default function CitasTabScreen() {
 
                     {/* Lista o estado vacío */}
                     {citas.length === 0 ? (
-                        <View className="items-center px-4 py-12 bg-gray-50 rounded-2xl">
+                        <View className="items-center px-4 py-12 bg-gray-50 dark:bg-[#151f2b] rounded-2xl">
                             <MaterialIcons
                                 name="event-busy"
                                 size={48}
                                 color="#9CA3AF"
                             />
-                            <Text className="mt-4 text-base text-center text-gray-500 font-poppins-semibold">
+                            <Text className="mt-4 text-base text-center text-gray-500 dark:text-gray-400 font-poppins-semibold">
                                 Sin citas programadas
                             </Text>
-                            <Text className="mt-1 text-sm text-center text-sos-gray font-poppins-medium">
+                            <Text className="mt-1 text-sm text-center text-sos-gray dark:text-gray-400 font-poppins-medium">
                                 Presiona &quot;Agendar&quot; para reservar tu primera cita médica.
                             </Text>
                         </View>
