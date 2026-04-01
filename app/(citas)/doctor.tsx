@@ -52,7 +52,7 @@ function DoctorCard({ doctor, onSelect, isDark }: DoctorCardProps) {
 
                 <View className="flex-1">
                     <Text className="text-base text-gray-900 dark:text-sos-white font-poppins-bold" numberOfLines={1}>
-                        Dr. {doctor.nombres} {doctor.apellidos}
+                        {doctor.nombres} {doctor.apellidos}
                     </Text>
                     <View className="flex-row items-center gap-1 mt-0.5">
                         <MaterialIcons name="email" size={13} color={iconColor} />

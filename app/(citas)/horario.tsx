@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Pressable,
     Text,
     useColorScheme,
@@ -131,12 +130,20 @@ export default function HorarioScreen() {
 
     const handleContinuar = () => {
         if (!horaSeleccionada) return;
-        // TODO: navegar a /(citas)/paciente
-        Alert.alert(
-            "Horario seleccionado",
-            `${fecha} a las ${formatHora(horaSeleccionada)}.\nLa pantalla de datos del paciente se implementará próximamente.`,
-            [{ text: "Entendido" }],
-        );
+        router.push({
+            pathname: "/(citas)/paciente",
+            params: {
+                categoriaId,
+                ubicacionNombre,
+                eaServiceId,
+                servicioNombre,
+                servicioDuracion,
+                eaProviderId,
+                doctorNombre,
+                fecha,
+                hora: horaSeleccionada,
+            },
+        });
     };
 
     const fechaLegible = new Intl.DateTimeFormat("es-NI", {

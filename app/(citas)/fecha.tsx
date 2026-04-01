@@ -72,7 +72,7 @@ function CalendarioMes({
     return (
         <View>
             {/* Encabezado mes/año */}
-            <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row justify-between items-center mb-4">
                 <Pressable
                     onPress={onPrevMes}
                     disabled={!puedeRetroceder}
@@ -101,7 +101,7 @@ function CalendarioMes({
             <View className="flex-row mb-2">
                 {DIAS_SEMANA.map((dia) => (
                     <View key={dia} className="flex-1 items-center">
-                        <Text className="text-xs text-sos-gray dark:text-gray-400 font-poppins-semibold uppercase">
+                        <Text className="text-xs uppercase text-sos-gray dark:text-gray-400 font-poppins-semibold">
                             {dia}
                         </Text>
                     </View>
@@ -147,7 +147,7 @@ function CalendarioMes({
                                               ? { borderWidth: 1.5, borderColor: THEME_COLORS.sosBluegreen }
                                               : undefined
                                     }
-                                    className="w-9 h-9 rounded-full items-center justify-center"
+                                    className="justify-center items-center w-9 h-9 rounded-full"
                                 >
                                     <Text className={`text-sm font-poppins-medium ${textColor}`}>
                                         {dia}
@@ -244,34 +244,34 @@ export default function FechaScreen() {
 
             <View className="flex-1 px-4">
                 {/* Título */}
-                <Text className="pt-2 text-3xl leading-tight tracking-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
+                <Text className="pt-2 text-3xl tracking-tight leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                     Selecciona la fecha
                 </Text>
 
                 {/* Resumen de selecciones previas */}
                 <View className="flex-row flex-wrap gap-3 mt-2 mb-6">
-                    <View className="flex-row items-center gap-1">
+                    <View className="flex-row gap-1 items-center">
                         <MaterialIcons name="location-on" size={13} color={THEME_COLORS.sosBluegreen} />
                         <Text className="text-xs text-sos-bluegreen font-poppins-medium">
                             {ubicacionNombre}
                         </Text>
                     </View>
-                    <View className="flex-row items-center gap-1">
+                    <View className="flex-row gap-1 items-center">
                         <MaterialIcons name="medical-services" size={13} color={isDark ? "#9CA3AF" : THEME_COLORS.sosGray} />
                         <Text className="text-xs text-sos-gray dark:text-gray-400 font-poppins-medium">
                             {servicioNombre}
                         </Text>
                     </View>
-                    <View className="flex-row items-center gap-1">
+                    <View className="flex-row gap-1 items-center">
                         <MaterialIcons name="person" size={13} color={isDark ? "#9CA3AF" : THEME_COLORS.sosGray} />
                         <Text className="text-xs text-sos-gray dark:text-gray-400 font-poppins-medium">
-                            Dr. {doctorNombre}
+                            {doctorNombre}
                         </Text>
                     </View>
                 </View>
 
                 {/* Nota domingos */}
-                <View className="flex-row items-center gap-2 mb-4 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50">
+                <View className="flex-row gap-2 items-center px-3 py-2 mb-4 bg-amber-50 rounded-xl border border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/50">
                     <MaterialIcons name="info-outline" size={15} color="#D97706" />
                     <Text className="flex-1 text-xs text-amber-700 dark:text-amber-400 font-poppins-medium">
                         Las clínicas no atienden los domingos.
@@ -294,9 +294,9 @@ export default function FechaScreen() {
                 </View>
 
                 {/* Botón continuar */}
-                <View className="mt-auto py-6">
+                <View className="py-6 mt-auto">
                     {fechaLegible && (
-                        <Text className="mb-3 text-sm text-center text-sos-bluegreen dark:text-sos-white font-poppins-medium capitalize">
+                        <Text className="mb-3 text-sm text-center capitalize text-sos-bluegreen dark:text-sos-white font-poppins-medium">
                             {fechaLegible}
                         </Text>
                     )}

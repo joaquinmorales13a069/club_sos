@@ -676,6 +676,44 @@ export const getDocumentoBase64 = async (fileId: string): Promise<string> => {
 
 // ─── Citas ───────────────────────────────────────────────
 
+export interface NuevaCitaPayload {
+    miembro_id: string;
+    empresa_id: string;
+    fecha_hora_cita: string;     // ISO 8601, ej. "2025-06-10T09:00:00.000+00:00"
+    ea_service_id: string;
+    ea_provider_id: string;
+    ea_customer_id: string;
+    para_titular: boolean;
+    paciente_nombre: string;
+    paciente_telefono: string | null;
+    paciente_correo: string | null;
+    paciente_cedula: string | null;
+}
+
+/**
+ * Crea una nueva cita en Appwrite con estado_sync = "pendiente".
+ * La cita queda pendiente de aprobación por un empresa_admin.
+ */
+export const crearCita = async (payload: NuevaCitaPayload): Promise<Cita> => {
+    try {
+        const doc = await databases.createDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.citasId!,
+            ID.unique(),
+            {
+                ...payload,
+                estado_sync: "pendiente",
+                ea_appointment_id: null,
+                motivo_cita: null,
+            },
+        );
+        return doc as unknown as Cita;
+    } catch (error) {
+        if (error instanceof Error) throw new Error(error.message);
+        throw new Error("Error al crear la cita");
+    }
+};
+
 /**
  * Obtiene las citas de un miembro ordenadas por fecha ascendente
  * (la próxima cita aparece primera).
