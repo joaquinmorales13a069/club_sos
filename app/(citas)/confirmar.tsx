@@ -47,9 +47,10 @@ interface FilaResumenProps {
     label: string;
     value: string;
     isDark: boolean;
+    capitalize?: boolean;
 }
 
-function FilaResumen({ icon, label, value, isDark }: FilaResumenProps) {
+function FilaResumen({ icon, label, value, isDark, capitalize = false }: FilaResumenProps) {
     const iconColor = isDark ? "#9CA3AF" : THEME_COLORS.sosGray;
     return (
         <View className="flex-row gap-3 items-start">
@@ -60,7 +61,7 @@ function FilaResumen({ icon, label, value, isDark }: FilaResumenProps) {
                 <Text className="text-xs text-sos-gray dark:text-gray-400 font-poppins-medium mb-0.5">
                     {label}
                 </Text>
-                <Text className="text-sm text-gray-900 capitalize dark:text-sos-white font-poppins-semibold">
+                <Text className={`text-sm text-gray-900 dark:text-sos-white font-poppins-semibold${capitalize ? " capitalize" : ""}`}>
                     {value}
                 </Text>
             </View>
@@ -96,7 +97,7 @@ export default function ConfirmarScreen() {
         doctorNombre: string;
         fecha: string;
         hora: string;
-        paraTitular: string;      // "true" | "false"
+        paraTitular: string;        // "true" | "false"
         pacienteNombre: string;
         pacienteTelefono: string;
         pacienteCorreo: string;
@@ -116,24 +117,27 @@ export default function ConfirmarScreen() {
             const miembro = await findMiembroByAuthUserId(user.$id);
             if (!miembro) throw new Error("No se encontró el perfil de miembro.");
 
-            // Build ISO datetime: combine fecha (YYYY-MM-DD) + hora (HH:mm)
-            const fechaHoraCita = `${fecha}T${hora}:00.000+00:00`;
+            const eaCustomerId = (miembro.ea_customer_id as string | null) ?? "";
 
+            // Guardar en Appwrite con estado "pendiente".
+            // Un empresa_admin revisará y aprobará la cita,
+            // momento en que se creará en Easy! Appointments.
+            const fechaHoraCita = `${fecha}T${hora}:00.000+00:00`;
             await crearCita({
                 miembro_id: miembro.$id,
                 empresa_id: miembro.empresa_id as string,
                 fecha_hora_cita: fechaHoraCita,
                 ea_service_id: eaServiceId,
                 ea_provider_id: eaProviderId,
-                ea_customer_id: (miembro.ea_customer_id as string) ?? "",
+                ea_customer_id: eaCustomerId,
                 para_titular: esTitular,
                 paciente_nombre: pacienteNombre,
                 paciente_telefono: pacienteTelefono || null,
                 paciente_correo: pacienteCorreo || null,
                 paciente_cedula: pacienteCedula || null,
+                estado_sync: "pendiente",
             });
 
-            // Navegar fuera del flujo de citas al éxito
             router.dismissAll();
             router.replace("/(tabs)/citas");
         } catch (err) {
@@ -174,8 +178,8 @@ export default function ConfirmarScreen() {
                 <View className="flex-row gap-2 items-start px-3 py-3 mb-6 bg-amber-50 rounded-xl border border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/50">
                     <MaterialIcons name="schedule" size={16} color="#D97706" />
                     <Text className="flex-1 text-xs leading-relaxed text-amber-700 dark:text-amber-400 font-poppins-medium">
-                        Tu cita quedará en estado{" "}
-                        <Text className="font-poppins-bold">pendiente</Text> hasta que un administrador la apruebe y coordine con la clínica.
+                        Tu solicitud quedará{" "}
+                        <Text className="font-poppins-bold">pendiente de aprobación</Text>. Un administrador la revisará y agendará con la clínica a la brevedad.
                     </Text>
                 </View>
 
@@ -190,12 +194,14 @@ export default function ConfirmarScreen() {
                         label="Especialidad"
                         value={servicioNombre}
                         isDark={isDark}
+                        capitalize
                     />
                     <FilaResumen
                         icon="location-on"
                         label="Ubicación"
                         value={ubicacionNombre}
                         isDark={isDark}
+                        capitalize
                     />
                 </View>
 
@@ -208,14 +214,16 @@ export default function ConfirmarScreen() {
                     <FilaResumen
                         icon="person"
                         label="Doctor"
-                        value={`${doctorNombre}`}
+                        value={doctorNombre}
                         isDark={isDark}
+                        capitalize
                     />
                     <FilaResumen
                         icon="calendar-today"
                         label="Fecha"
                         value={formatFecha(fecha)}
                         isDark={isDark}
+                        capitalize
                     />
                     <FilaResumen
                         icon="access-time"
@@ -245,6 +253,7 @@ export default function ConfirmarScreen() {
                         label="Nombre"
                         value={pacienteNombre}
                         isDark={isDark}
+                        capitalize
                     />
                     {!!pacienteTelefono && (
                         <FilaResumen

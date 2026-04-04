@@ -43,3 +43,59 @@ export const getDisponibilidad = async (
 
     return data as string[];
 };
+
+// ─── Crear cita en EA ─────────────────────────────────────────────────────────
+
+export interface EACitaPayload {
+    eaServiceId: number;
+    eaProviderId: number;
+    eaCustomerId: number;
+    fecha: string;          // YYYY-MM-DD
+    hora: string;           // HH:mm
+    duracionMinutos: number;
+    notes?: string;
+}
+
+/**
+ * Crea una cita en Easy! Appointments y devuelve el ID asignado.
+ *
+ * El campo `notes` se usa para registrar los datos del paciente
+ * cuando la cita es para un tercero.
+ */
+export const crearCitaEA = async (payload: EACitaPayload): Promise<number> => {
+    const start = `${payload.fecha} ${payload.hora}:00`;
+
+    // Calcular hora de fin: start + duracion en minutos
+    const [h, m] = payload.hora.split(":").map(Number);
+    const startDate = new Date(2000, 0, 1, h, m);
+    startDate.setMinutes(startDate.getMinutes() + payload.duracionMinutos);
+    const endH = String(startDate.getHours()).padStart(2, "0");
+    const endM = String(startDate.getMinutes()).padStart(2, "0");
+    const end = `${payload.fecha} ${endH}:${endM}:00`;
+
+    const body = {
+        start,
+        end,
+        notes: payload.notes ?? "",
+        customerId: payload.eaCustomerId,
+        providerId: payload.eaProviderId,
+        serviceId: payload.eaServiceId,
+    };
+
+    const response = await fetch(`${EA_BASE_URL}/appointments`, {
+        method: "POST",
+        headers: eaHeaders,
+        body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+        let detail = "";
+        try { detail = await response.text(); } catch { /* ignore */ }
+        throw new Error(
+            `Error al crear cita en el sistema (HTTP ${response.status})${detail ? `: ${detail}` : ""}`,
+        );
+    }
+
+    const data = await response.json() as { id: number };
+    return data.id;
+};

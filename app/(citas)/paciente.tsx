@@ -15,6 +15,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import PhoneInputField from "@/components/citas/PhoneInputField";
 
 import TopAppBar from "@/components/auth/TopAppBar";
 import SOSButton from "@/components/shared/SOSButton";
@@ -56,7 +57,7 @@ interface InputFieldProps {
     optional?: boolean;
     disabled?: boolean;
     keyboardType?: "default" | "phone-pad" | "email-address";
-    autoCapitalize?: "none" | "sentences" | "words";
+    autoCapitalize?: "none" | "sentences" | "words" | "characters";
 }
 
 function InputField({
@@ -130,7 +131,6 @@ export default function PacienteScreen() {
     const isDark = scheme === "dark";
 
     const {
-        categoriaId,
         ubicacionNombre,
         eaServiceId,
         servicioNombre,
@@ -140,7 +140,6 @@ export default function PacienteScreen() {
         fecha,
         hora,
     } = useLocalSearchParams<{
-        categoriaId: string;
         ubicacionNombre: string;
         eaServiceId: string;
         servicioNombre: string;
@@ -170,6 +169,10 @@ export default function PacienteScreen() {
         noTieneCorreo: false,
     });
     const [errors, setErrors] = useState<FormErrors>({});
+
+    // ─── Selector de país para teléfono del tercero ───────────
+    const [telefonoCountryCode, setTelefonoCountryCode] = useState("NI");
+    const [telefonoCallingCode, setTelefonoCallingCode] = useState("505");
 
     // ─── Carga datos del miembro ──────────────────────────────
     const loadMiembro = useCallback(async () => {
@@ -223,17 +226,22 @@ export default function PacienteScreen() {
     const handleContinuar = () => {
         Keyboard.dismiss();
 
+        const paramsBase = {
+            ubicacionNombre,
+            eaServiceId,
+            servicioNombre,
+            servicioDuracion,
+            eaProviderId,
+            doctorNombre,
+            fecha,
+            hora,
+        };
+
         if (modo === "titular") {
             router.push({
                 pathname: "/(citas)/confirmar",
                 params: {
-                    ubicacionNombre,
-                    eaServiceId,
-                    servicioNombre,
-                    eaProviderId,
-                    doctorNombre,
-                    fecha,
-                    hora,
+                    ...paramsBase,
                     paraTitular: "true",
                     pacienteNombre: miembroNombre,
                     pacienteTelefono: miembroTelefono,
@@ -249,16 +257,12 @@ export default function PacienteScreen() {
         router.push({
             pathname: "/(citas)/confirmar",
             params: {
-                ubicacionNombre,
-                eaServiceId,
-                servicioNombre,
-                eaProviderId,
-                doctorNombre,
-                fecha,
-                hora,
+                ...paramsBase,
                 paraTitular: "false",
                 pacienteNombre: datos.nombre,
-                pacienteTelefono: datos.noTieneTelefono ? miembroTelefono : datos.telefono,
+                pacienteTelefono: datos.noTieneTelefono
+                                    ? miembroTelefono
+                                    : datos.telefono ? `+${telefonoCallingCode}${datos.telefono}` : "",
                 pacienteCorreo: datos.noTieneCorreo ? "" : datos.correo,
                 pacienteCedula: datos.cedula,
             },
@@ -289,24 +293,24 @@ export default function PacienteScreen() {
                         keyboardShouldPersistTaps="handled"
                     >
                         {/* Título */}
-                        <Text className="pt-2 text-3xl leading-tight tracking-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
+                        <Text className="pt-2 text-3xl tracking-tight leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                             ¿Para quién es la cita?
                         </Text>
 
                         {/* Resumen de selecciones previas */}
                         <View className="flex-row flex-wrap gap-3 mt-2 mb-6">
-                            <View className="flex-row items-center gap-1">
+                            <View className="flex-row gap-1 items-center">
                                 <MaterialIcons name="calendar-today" size={13} color={THEME_COLORS.sosBluegreen} />
-                                <Text className="text-xs text-sos-bluegreen font-poppins-medium capitalize">
+                                <Text className="text-xs capitalize text-sos-bluegreen font-poppins-medium">
                                     {new Intl.DateTimeFormat("es-NI", { weekday: "short", day: "numeric", month: "short" }).format(new Date(fecha + "T12:00:00"))}
                                     {" · "}
                                     {new Intl.DateTimeFormat("es-NI", { hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(`2000-01-01T${hora}`))}
                                 </Text>
                             </View>
-                            <View className="flex-row items-center gap-1">
+                            <View className="flex-row gap-1 items-center">
                                 <MaterialIcons name="person" size={13} color={grayIcon} />
                                 <Text className="text-xs text-sos-gray dark:text-gray-400 font-poppins-medium">
-                                    Dr. {doctorNombre}
+                                    {doctorNombre}
                                 </Text>
                             </View>
                         </View>
@@ -331,7 +335,7 @@ export default function PacienteScreen() {
                                         >
                                             <View
                                                 style={{ backgroundColor: activo ? THEME_COLORS.sosBluegreen : isDark ? "#374151" : "#F3F4F6" }}
-                                                className="w-10 h-10 rounded-full items-center justify-center mb-2"
+                                                className="justify-center items-center mb-2 w-10 h-10 rounded-full"
                                             >
                                                 <MaterialIcons name={icon} size={20} color={activo ? "#FFFFFF" : grayIcon} />
                                             </View>
@@ -355,8 +359,8 @@ export default function PacienteScreen() {
                                 </View>
                             ) : (
                                 <View className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#151f2b] p-5 gap-4">
-                                    <View className="flex-row items-center gap-3">
-                                        <View className="w-12 h-12 rounded-full bg-sos-bluegreen/15 items-center justify-center shrink-0">
+                                    <View className="flex-row gap-3 items-center">
+                                        <View className="justify-center items-center w-12 h-12 rounded-full bg-sos-bluegreen/15 shrink-0">
                                             <MaterialIcons name="person" size={22} color={THEME_COLORS.sosBluegreen} />
                                         </View>
                                         <View className="flex-1">
@@ -372,13 +376,13 @@ export default function PacienteScreen() {
                                     <View className="h-px bg-gray-100 dark:bg-gray-700" />
 
                                     <View className="gap-3">
-                                        <View className="flex-row items-center gap-2">
+                                        <View className="flex-row gap-2 items-center">
                                             <MaterialIcons name="phone" size={16} color={grayIcon} />
                                             <Text className="text-sm text-gray-700 dark:text-gray-300 font-poppins-medium">
                                                 {miembroTelefono || "No registrado"}
                                             </Text>
                                         </View>
-                                        <View className="flex-row items-center gap-2">
+                                        <View className="flex-row gap-2 items-center">
                                             <MaterialIcons name="email" size={16} color={grayIcon} />
                                             <Text className="text-sm text-gray-700 dark:text-gray-300 font-poppins-medium">
                                                 {miembroCorreo || "No registrado"}
@@ -393,7 +397,7 @@ export default function PacienteScreen() {
                         {modo === "tercero" && (
                             <View className="gap-4">
                                 {/* Aviso informativo */}
-                                <View className="flex-row items-start gap-2 px-3 py-3 rounded-xl bg-sos-bluegreen/10 dark:bg-sos-bluegreen/5 border border-sos-bluegreen/20">
+                                <View className="flex-row gap-2 items-start px-3 py-3 rounded-xl border bg-sos-bluegreen/10 dark:bg-sos-bluegreen/5 border-sos-bluegreen/20">
                                     <MaterialIcons name="info-outline" size={16} color={THEME_COLORS.sosBluegreen} />
                                     <Text className="flex-1 text-xs leading-relaxed text-sos-bluegreen dark:text-sos-bluegreen font-poppins-medium">
                                         Ingresa los datos de la persona que asistirá a la cita. Solo el nombre es obligatorio.
@@ -411,15 +415,21 @@ export default function PacienteScreen() {
 
                                 {/* Teléfono + toggle "No tiene teléfono" */}
                                 <View>
-                                    <InputField
-                                        label="Teléfono"
-                                        value={datos.telefono}
-                                        onChangeText={(v) => setField("telefono", v)}
-                                        placeholder="Ej. +505 8888-8888"
+                                    <Text className="text-sm text-gray-900 dark:text-sos-white font-poppins-medium mb-1.5">
+                                        Teléfono
+                                    </Text>
+
+                                    <PhoneInputField
+                                        digits={datos.telefono}
+                                        onChangeDigits={(v) => setField("telefono", v)}
+                                        callingCode={telefonoCallingCode}
+                                        countryCode={telefonoCountryCode}
+                                        onCountryChange={(code, cca2) => {
+                                            setTelefonoCallingCode(code);
+                                            setTelefonoCountryCode(cca2);
+                                        }}
                                         isDark={isDark}
                                         error={errors.telefono}
-                                        keyboardType="phone-pad"
-                                        autoCapitalize="none"
                                         disabled={datos.noTieneTelefono}
                                     />
 
@@ -436,7 +446,7 @@ export default function PacienteScreen() {
                                         }}
                                         accessibilityRole="checkbox"
                                         accessibilityState={{ checked: datos.noTieneTelefono }}
-                                        className="flex-row items-center gap-2 mt-2 active:opacity-70"
+                                        className="flex-row gap-2 items-center mt-2 active:opacity-70"
                                     >
                                         <View
                                             style={{
@@ -461,7 +471,7 @@ export default function PacienteScreen() {
 
                                     {/* Aviso: se usará el contacto del titular */}
                                     {datos.noTieneTelefono && (
-                                        <View className="flex-row items-center gap-2 mt-2 px-3 py-2 rounded-xl bg-sos-bluegreen/10 dark:bg-sos-bluegreen/5 border border-sos-bluegreen/20">
+                                        <View className="flex-row gap-2 items-center px-3 py-2 mt-2 rounded-xl border bg-sos-bluegreen/10 dark:bg-sos-bluegreen/5 border-sos-bluegreen/20">
                                             <MaterialIcons name="info-outline" size={14} color={THEME_COLORS.sosBluegreen} />
                                             <Text className="flex-1 text-xs text-sos-bluegreen font-poppins-medium">
                                                 Se utilizará el contacto del dueño de la cuenta
@@ -529,7 +539,7 @@ export default function PacienteScreen() {
                                         }}
                                         accessibilityRole="checkbox"
                                         accessibilityState={{ checked: datos.noTieneCorreo }}
-                                        className="flex-row items-center gap-2 mt-2 active:opacity-70"
+                                        className="flex-row gap-2 items-center mt-2 active:opacity-70"
                                     >
                                         <View
                                             style={{

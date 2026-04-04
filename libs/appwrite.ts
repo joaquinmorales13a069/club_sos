@@ -688,22 +688,28 @@ export interface NuevaCitaPayload {
     paciente_telefono: string | null;
     paciente_correo: string | null;
     paciente_cedula: string | null;
+    /** ID retornado por EA tras crear la cita exitosamente */
+    ea_appointment_id?: string | null;
+    /** "sincronizado" si ya se creó en EA, "pendiente" si no */
+    estado_sync?: "pendiente" | "sincronizado" | "fallido";
 }
 
 /**
- * Crea una nueva cita en Appwrite con estado_sync = "pendiente".
- * La cita queda pendiente de aprobación por un empresa_admin.
+ * Crea una nueva cita en Appwrite.
+ * Si se provee ea_appointment_id se guarda como "sincronizado",
+ * de lo contrario queda como "pendiente".
  */
 export const crearCita = async (payload: NuevaCitaPayload): Promise<Cita> => {
+    const { ea_appointment_id, estado_sync, ...rest } = payload;
     try {
         const doc = await databases.createDocument(
             appwriteConfig.databaseId!,
             appwriteConfig.citasId!,
             ID.unique(),
             {
-                ...payload,
-                estado_sync: "pendiente",
-                ea_appointment_id: null,
+                ...rest,
+                estado_sync: estado_sync ?? (ea_appointment_id ? "sincronizado" : "pendiente"),
+                ea_appointment_id: ea_appointment_id ?? null,
                 motivo_cita: null,
             },
         );

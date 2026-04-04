@@ -54,7 +54,7 @@ function HoraChip({ hora, seleccionada, isDark, onPress }: HoraChipProps) {
                         ? { backgroundColor: THEME_COLORS.sosBluegreen }
                         : { borderWidth: 1, borderColor }
                 }
-                className="items-center justify-center py-3 rounded-xl"
+                className="justify-center items-center py-3 rounded-xl"
             >
                 <Text
                     className={`text-sm font-poppins-semibold ${
@@ -112,7 +112,15 @@ export default function HorarioScreen() {
                 parseInt(eaServiceId),
                 fecha,
             );
-            setHorarios(data);
+
+            // Filtrar slots que queden dentro de las próximas 24 horas
+            const minTimestamp = Date.now() + 24 * 60 * 60 * 1000;
+            const horariosValidos = data.filter((hora) => {
+                const [h, m] = hora.split(":").map(Number);
+                const slotDate = new Date(`${fecha}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
+                return slotDate.getTime() >= minTimestamp;
+            });
+            setHorarios(horariosValidos);
         } catch (err) {
             setError(
                 err instanceof Error
@@ -164,24 +172,24 @@ export default function HorarioScreen() {
 
             {/* Título y contexto */}
             <View className="px-4 pt-2 pb-4">
-                <Text className="text-3xl leading-tight tracking-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
+                <Text className="text-3xl tracking-tight leading-tight font-poppins-bold text-sos-bluegreen dark:text-sos-white">
                     Selecciona el horario
                 </Text>
 
                 <View className="flex-row flex-wrap gap-3 mt-2">
-                    <View className="flex-row items-center gap-1">
+                    <View className="flex-row gap-1 items-center">
                         <MaterialIcons name="calendar-today" size={13} color={THEME_COLORS.sosBluegreen} />
-                        <Text className="text-xs text-sos-bluegreen font-poppins-medium capitalize">
+                        <Text className="text-xs capitalize text-sos-bluegreen font-poppins-medium">
                             {fechaLegible}
                         </Text>
                     </View>
-                    <View className="flex-row items-center gap-1">
+                    <View className="flex-row gap-1 items-center">
                         <MaterialIcons name="person" size={13} color={grayIconColor} />
                         <Text className="text-xs text-sos-gray dark:text-gray-400 font-poppins-medium">
-                            Dr. {doctorNombre}
+                            {doctorNombre}
                         </Text>
                     </View>
-                    <View className="flex-row items-center gap-1">
+                    <View className="flex-row gap-1 items-center">
                         <MaterialIcons name="medical-services" size={13} color={grayIconColor} />
                         <Text className="text-xs text-sos-gray dark:text-gray-400 font-poppins-medium">
                             {servicioNombre}
@@ -192,20 +200,20 @@ export default function HorarioScreen() {
 
             {/* Contenido */}
             {loading ? (
-                <View className="flex-1 items-center justify-center">
+                <View className="flex-1 justify-center items-center">
                     <ActivityIndicator size="large" color={THEME_COLORS.sosBluegreen} />
                     <Text className="mt-4 text-sm text-sos-gray dark:text-gray-400 font-poppins-medium">
                         Consultando disponibilidad...
                     </Text>
                 </View>
             ) : error ? (
-                <View className="flex-1 items-center justify-center px-4">
+                <View className="flex-1 justify-center items-center px-4">
                     <Text className="text-base text-center text-red-600 dark:text-red-400 font-poppins-medium">
                         {error}
                     </Text>
                     <Pressable
                         onPress={loadHorarios}
-                        className="mt-4 px-6 py-3 rounded-xl bg-sos-bluegreen"
+                        className="px-6 py-3 mt-4 rounded-xl bg-sos-bluegreen"
                     >
                         <Text className="text-sm text-sos-white font-poppins-semibold">
                             Reintentar
@@ -213,7 +221,7 @@ export default function HorarioScreen() {
                     </Pressable>
                 </View>
             ) : horarios.length === 0 ? (
-                <View className="flex-1 items-center justify-center px-4">
+                <View className="flex-1 justify-center items-center px-4">
                     <MaterialIcons name="event-busy" size={48} color="#9CA3AF" />
                     <Text className="mt-4 text-base text-center text-gray-500 dark:text-gray-400 font-poppins-semibold">
                         Sin horarios disponibles
@@ -223,7 +231,7 @@ export default function HorarioScreen() {
                     </Text>
                     <Pressable
                         onPress={() => router.back()}
-                        className="mt-5 px-6 py-3 rounded-xl border border-sos-bluegreen"
+                        className="px-6 py-3 mt-5 rounded-xl border border-sos-bluegreen"
                     >
                         <Text className="text-sm text-sos-bluegreen font-poppins-semibold">
                             Cambiar fecha
@@ -250,7 +258,7 @@ export default function HorarioScreen() {
                         </View>
                     </TabScrollView>
 
-                    <View className="px-4 pb-6 pt-2">
+                    <View className="px-4 pt-2 pb-6">
                         <SOSButton
                             label="Continuar"
                             onPress={handleContinuar}

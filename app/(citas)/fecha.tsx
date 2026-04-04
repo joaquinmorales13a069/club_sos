@@ -40,24 +40,28 @@ interface CalendarioMesProps {
     year: number;
     month: number;
     selected: string | null;
-    hoy: string;
+    minFecha: string;
+    maxFecha: string;
     isDark: boolean;
     onSelectDia: (fecha: string) => void;
     onPrevMes: () => void;
     onNextMes: () => void;
     puedeRetroceder: boolean;
+    puedeAvanzar: boolean;
 }
 
 function CalendarioMes({
     year,
     month,
     selected,
-    hoy,
+    minFecha,
+    maxFecha,
     isDark,
     onSelectDia,
     onPrevMes,
     onNextMes,
     puedeRetroceder,
+    puedeAvanzar,
 }: CalendarioMesProps) {
     const totalDias = diasEnMes(year, month);
     const offset = primerDiaSemana(year, month);
@@ -89,9 +93,10 @@ function CalendarioMes({
 
                 <Pressable
                     onPress={onNextMes}
+                    disabled={!puedeAvanzar}
                     accessibilityRole="button"
                     accessibilityLabel="Mes siguiente"
-                    className="p-2 rounded-xl active:opacity-60"
+                    className={`p-2 rounded-xl ${!puedeAvanzar ? "opacity-30" : "active:opacity-60"}`}
                 >
                     <MaterialIcons name="chevron-right" size={24} color={THEME_COLORS.sosBluegreen} />
                 </Pressable>
@@ -118,10 +123,9 @@ function CalendarioMes({
 
                         const fechaStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
                         const esDomingo = (offset + dia - 1) % 7 === 6;
-                        const esPasado = fechaStr < hoy;
-                        const deshabilitado = esDomingo || esPasado;
+                        const fueradeRango = fechaStr < minFecha || fechaStr > maxFecha;
+                        const deshabilitado = esDomingo || fueradeRango;
                         const esSeleccionado = fechaStr === selected;
-                        const esHoy = fechaStr === hoy;
 
                         const textColor = esSeleccionado
                             ? "text-sos-white"
@@ -143,9 +147,7 @@ function CalendarioMes({
                                     style={
                                         esSeleccionado
                                             ? { backgroundColor: THEME_COLORS.sosBluegreen }
-                                            : esHoy
-                                              ? { borderWidth: 1.5, borderColor: THEME_COLORS.sosBluegreen }
-                                              : undefined
+                                            : undefined
                                     }
                                     className="justify-center items-center w-9 h-9 rounded-full"
                                 >
@@ -187,17 +189,27 @@ export default function FechaScreen() {
         doctorNombre: string;
     }>();
 
-    const hoy = toLocalDateString(new Date());
-    const hoyDate = new Date();
+    const ahora = new Date();
 
-    const [year, setYear] = useState(hoyDate.getFullYear());
-    const [month, setMonth] = useState(hoyDate.getMonth());
+    // Mínimo: 24 horas desde ahora
+    const cutoff24h = new Date(ahora.getTime() + 24 * 60 * 60 * 1000);
+    const minFecha = toLocalDateString(cutoff24h);
+
+    // Máximo: 3 meses desde hoy
+    const maxDate = new Date(ahora);
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    const maxFecha = toLocalDateString(maxDate);
+
+    const [year, setYear] = useState(ahora.getFullYear());
+    const [month, setMonth] = useState(ahora.getMonth());
     const [fechaSeleccionada, setFechaSeleccionada] = useState<string | null>(null);
 
-    const mesActualYear = hoyDate.getFullYear();
-    const mesActualMonth = hoyDate.getMonth();
+    const mesActualYear = ahora.getFullYear();
+    const mesActualMonth = ahora.getMonth();
     const puedeRetroceder =
         year > mesActualYear || (year === mesActualYear && month > mesActualMonth);
+    const puedeAvanzar =
+        year < maxDate.getFullYear() || (year === maxDate.getFullYear() && month < maxDate.getMonth());
 
     const handlePrevMes = () => {
         if (month === 0) { setYear((y) => y - 1); setMonth(11); }
@@ -274,7 +286,7 @@ export default function FechaScreen() {
                 <View className="flex-row gap-2 items-center px-3 py-2 mb-4 bg-amber-50 rounded-xl border border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/50">
                     <MaterialIcons name="info-outline" size={15} color="#D97706" />
                     <Text className="flex-1 text-xs text-amber-700 dark:text-amber-400 font-poppins-medium">
-                        Las clínicas no atienden los domingos.
+                        Las citas deben agendarse con al menos 24 horas de antelación y hasta 3 meses en adelante. No se atiende los domingos.
                     </Text>
                 </View>
 
@@ -284,12 +296,14 @@ export default function FechaScreen() {
                         year={year}
                         month={month}
                         selected={fechaSeleccionada}
-                        hoy={hoy}
+                        minFecha={minFecha}
+                        maxFecha={maxFecha}
                         isDark={isDark}
                         onSelectDia={setFechaSeleccionada}
                         onPrevMes={handlePrevMes}
                         onNextMes={handleNextMes}
                         puedeRetroceder={puedeRetroceder}
+                        puedeAvanzar={puedeAvanzar}
                     />
                 </View>
 
