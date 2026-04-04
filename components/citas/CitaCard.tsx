@@ -47,14 +47,29 @@ interface CitaCardProps {
 export default function CitaCard({ cita, servicio, doctor }: CitaCardProps) {
     const fechaFormateada = useMemo(() => {
         const date = new Date(cita.fecha_hora_cita);
-        return new Intl.DateTimeFormat("es-NI", {
-            weekday: "short",
+        const weekday = new Intl.DateTimeFormat("es-NI", {
+            weekday: "long",
+            timeZone: "UTC",
+        }).format(date);
+        const day = new Intl.DateTimeFormat("es-NI", {
             day: "2-digit",
-            month: "short",
+            timeZone: "UTC",
+        }).format(date);
+        const month = new Intl.DateTimeFormat("es-NI", {
+            month: "long",
+            timeZone: "UTC",
+        }).format(date);
+        const time = new Intl.DateTimeFormat("es-NI", {
             hour: "2-digit",
             minute: "2-digit",
             hour12: true,
+            timeZone: "UTC",
         }).format(date);
+
+        const weekdayCap = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+        const monthCap = month.charAt(0).toUpperCase() + month.slice(1);
+
+        return `${weekdayCap}, ${day} de ${monthCap} a las ${time}`;
     }, [cita.fecha_hora_cita]);
 
     const config = ESTADO_CONFIG[cita.estado_sync] ?? ESTADO_CONFIG.pendiente;
@@ -103,17 +118,15 @@ export default function CitaCard({ cita, servicio, doctor }: CitaCardProps) {
                         </Text>
                     </View>
 
-                    {!cita.para_titular && (
-                        <View className="flex-row items-center gap-2">
-                            <MaterialIcons name="person-pin" size={16} color="rgba(255,255,255,0.85)" />
-                            <Text className="flex-1 text-sm text-sos-white/90">
-                                Paciente:{" "}
-                                <Text className="text-sos-white font-poppins-medium">
-                                    {cita.paciente_nombre}
-                                </Text>
+                    <View className="flex-row items-center gap-2">
+                        <MaterialIcons name="person-pin" size={16} color="rgba(255,255,255,0.85)" />
+                        <Text className="flex-1 text-sm text-sos-white/90">
+                            Paciente:{" "}
+                            <Text className="text-sos-white font-poppins-medium">
+                                {cita.paciente_nombre}
                             </Text>
-                        </View>
-                    )}
+                        </Text>
+                    </View>
                 </View>
             </View>
         </View>
