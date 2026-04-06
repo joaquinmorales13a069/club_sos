@@ -16,6 +16,7 @@ import TabScrollView from "@/components/shared/TabScrollView";
 import SOSButton from "@/components/shared/SOSButton";
 import {
     crearCita,
+    deleteCita,
     getCurrentUser,
     findMiembroByAuthUserId,
 } from "@/libs/appwrite";
@@ -89,6 +90,7 @@ export default function ConfirmarScreen() {
         pacienteTelefono,
         pacienteCorreo,
         pacienteCedula,
+        citaIdToEdit,
     } = useLocalSearchParams<{
         ubicacionNombre: string;
         eaServiceId: string;
@@ -102,6 +104,7 @@ export default function ConfirmarScreen() {
         pacienteTelefono: string;
         pacienteCorreo: string;
         pacienteCedula: string;
+        citaIdToEdit?: string;
     }>();
 
     const [loading, setLoading] = useState(false);
@@ -123,6 +126,11 @@ export default function ConfirmarScreen() {
             // Un empresa_admin revisará y aprobará la cita,
             // momento en que se creará en Easy! Appointments.
             const fechaHoraCita = `${fecha}T${hora}:00.000+00:00`;
+
+            if (citaIdToEdit) {
+                await deleteCita(citaIdToEdit);
+            }
+
             await crearCita({
                 miembro_id: miembro.$id,
                 empresa_id: miembro.empresa_id as string,

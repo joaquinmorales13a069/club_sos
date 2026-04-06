@@ -179,6 +179,7 @@ export default function FechaScreen() {
         servicioDuracion,
         eaProviderId,
         doctorNombre,
+        citaIdToEdit,
     } = useLocalSearchParams<{
         categoriaId: string;
         ubicacionNombre: string;
@@ -187,6 +188,7 @@ export default function FechaScreen() {
         servicioDuracion: string;
         eaProviderId: string;
         doctorNombre: string;
+        citaIdToEdit?: string;
     }>();
 
     const ahora = new Date();
@@ -234,6 +236,7 @@ export default function FechaScreen() {
                 eaProviderId,
                 doctorNombre,
                 fecha: fechaSeleccionada,
+                ...(citaIdToEdit ? { citaIdToEdit } : {}),
             },
         });
     };

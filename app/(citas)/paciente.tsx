@@ -139,6 +139,7 @@ export default function PacienteScreen() {
         doctorNombre,
         fecha,
         hora,
+        citaIdToEdit,
     } = useLocalSearchParams<{
         ubicacionNombre: string;
         eaServiceId: string;
@@ -148,6 +149,7 @@ export default function PacienteScreen() {
         doctorNombre: string;
         fecha: string;
         hora: string;
+        citaIdToEdit?: string;
     }>();
 
     // ─── Estado del miembro (para "Para mí") ──────────────────
@@ -237,6 +239,8 @@ export default function PacienteScreen() {
             hora,
         };
 
+        const citaEditParam = citaIdToEdit ? { citaIdToEdit } : {};
+
         if (modo === "titular") {
             router.push({
                 pathname: "/(citas)/confirmar",
@@ -247,6 +251,7 @@ export default function PacienteScreen() {
                     pacienteTelefono: miembroTelefono,
                     pacienteCorreo: miembroCorreo,
                     pacienteCedula: "",
+                    ...citaEditParam,
                 },
             });
             return;
@@ -265,6 +270,7 @@ export default function PacienteScreen() {
                                     : datos.telefono ? `+${telefonoCallingCode}${datos.telefono}` : "",
                 pacienteCorreo: datos.noTieneCorreo ? "" : datos.correo,
                 pacienteCedula: datos.cedula,
+                ...citaEditParam,
             },
         });
     };

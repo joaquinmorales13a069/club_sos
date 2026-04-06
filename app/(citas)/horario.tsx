@@ -86,6 +86,7 @@ export default function HorarioScreen() {
         eaProviderId,
         doctorNombre,
         fecha,
+        citaIdToEdit,
     } = useLocalSearchParams<{
         categoriaId: string;
         ubicacionNombre: string;
@@ -95,6 +96,7 @@ export default function HorarioScreen() {
         eaProviderId: string;
         doctorNombre: string;
         fecha: string;
+        citaIdToEdit?: string;
     }>();
 
     const [horarios, setHorarios] = useState<string[]>([]);
@@ -150,6 +152,7 @@ export default function HorarioScreen() {
                 doctorNombre,
                 fecha,
                 hora: horaSeleccionada,
+                ...(citaIdToEdit ? { citaIdToEdit } : {}),
             },
         });
     };

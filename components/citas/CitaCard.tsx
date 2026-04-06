@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import type { Cita } from "@/type";
 
@@ -40,11 +40,13 @@ interface CitaCardProps {
     cita: Cita;
     servicio: string;
     doctor: string;
+    onEdit?: () => void;
+    onDelete?: () => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function CitaCard({ cita, servicio, doctor }: CitaCardProps) {
+export default function CitaCard({ cita, servicio, doctor, onEdit, onDelete }: CitaCardProps) {
     const fechaFormateada = useMemo(() => {
         const date = new Date(cita.fecha_hora_cita);
         const weekday = new Intl.DateTimeFormat("es-NI", {
@@ -128,6 +130,38 @@ export default function CitaCard({ cita, servicio, doctor }: CitaCardProps) {
                         </Text>
                     </View>
                 </View>
+
+                {/* Acciones */}
+                {(onDelete || (onEdit && cita.estado_sync === "pendiente")) && (
+                    <View className="flex-row gap-2 mt-4">
+                        {onEdit && cita.estado_sync === "pendiente" && (
+                            <Pressable
+                                onPress={onEdit}
+                                accessibilityRole="button"
+                                accessibilityLabel="Editar cita"
+                                className="flex-1 flex-row items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sos-white/20 active:opacity-70"
+                            >
+                                <MaterialIcons name="edit" size={16} color="rgba(255,255,255,0.9)" />
+                                <Text className="text-sm text-sos-white font-poppins-semibold">
+                                    Editar
+                                </Text>
+                            </Pressable>
+                        )}
+                        {onDelete && (
+                            <Pressable
+                                onPress={onDelete}
+                                accessibilityRole="button"
+                                accessibilityLabel="Eliminar cita"
+                                className="flex-1 flex-row items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sos-white/20 active:opacity-70"
+                            >
+                                <MaterialIcons name="delete-outline" size={16} color="rgba(255,255,255,0.9)" />
+                                <Text className="text-sm text-sos-white font-poppins-semibold">
+                                    Eliminar
+                                </Text>
+                            </Pressable>
+                        )}
+                    </View>
+                )}
             </View>
         </View>
     );

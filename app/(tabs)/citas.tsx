@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import {
     ActivityIndicator,
+    Alert,
     Pressable,
     Text,
     View,
@@ -17,6 +18,7 @@ import {
     getCitasByMiembro,
     getServiciosByEaIds,
     getDoctoresByEaIds,
+    deleteCita,
 } from "@/libs/appwrite";
 import { THEME_COLORS } from "@/libs/themeColors";
 import type { Cita, Servicio, Doctor } from "../../type";
@@ -25,6 +27,7 @@ import type { Cita, Servicio, Doctor } from "../../type";
 
 type ServiceMap = Map<number, string>;
 type DoctorMap = Map<number, string>;
+type ServiceDataMap = Map<number, Servicio>;
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
@@ -33,6 +36,7 @@ export default function CitasTabScreen() {
 
     const [citas, setCitas] = useState<Cita[]>([]);
     const [serviceMap, setServiceMap] = useState<ServiceMap>(new Map());
+    const [serviceDataMap, setServiceDataMap] = useState<ServiceDataMap>(new Map());
     const [doctorMap, setDoctorMap] = useState<DoctorMap>(new Map());
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -75,10 +79,12 @@ export default function CitasTabScreen() {
                     getDoctoresByEaIds(providerEaIds),
                 ]);
 
+                const serviciosList = services as Servicio[];
                 setServiceMap(
-                    new Map(
-                        (services as Servicio[]).map((s) => [s.ea_id, s.nombre]),
-                    ),
+                    new Map(serviciosList.map((s) => [s.ea_id, s.nombre])),
+                );
+                setServiceDataMap(
+                    new Map(serviciosList.map((s) => [s.ea_id, s])),
                 );
                 setDoctorMap(
                     new Map(
@@ -115,6 +121,49 @@ export default function CitasTabScreen() {
 
     const handleAgendar = () => {
         router.push("/(citas)/ubicacion");
+    };
+
+    const handleDelete = (citaId: string) => {
+        Alert.alert(
+            "Eliminar cita",
+            "¿Estás seguro de que deseas eliminar esta cita? Esta acción no se puede deshacer.",
+            [
+                { text: "Cancelar", style: "cancel" },
+                {
+                    text: "Eliminar",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await deleteCita(citaId);
+                            await loadCitas(false);
+                        } catch {
+                            Alert.alert("Error", "No se pudo eliminar la cita. Intenta de nuevo.");
+                        }
+                    },
+                },
+            ],
+        );
+    };
+
+    const handleEdit = (cita: Cita) => {
+        const servicio = serviceDataMap.get(parseInt(cita.ea_service_id));
+        if (!servicio) return;
+
+        const ubicacionNombre = servicio.ea_category_id === 1 ? "Managua" : "León";
+
+        router.push({
+            pathname: "/(citas)/fecha",
+            params: {
+                categoriaId: String(servicio.ea_category_id),
+                ubicacionNombre,
+                eaServiceId: cita.ea_service_id,
+                servicioNombre: servicio.nombre,
+                servicioDuracion: String(servicio.duracion),
+                eaProviderId: cita.ea_provider_id,
+                doctorNombre: doctorMap.get(parseInt(cita.ea_provider_id)) ?? "",
+                citaIdToEdit: cita.$id,
+            },
+        });
     };
 
     // ─── Loading ─────────────────────────────────────────────
@@ -217,6 +266,8 @@ export default function CitasTabScreen() {
                                             parseInt(cita.ea_provider_id),
                                         ) ?? "Doctor no disponible"
                                     }
+                                    onEdit={() => handleEdit(cita)}
+                                    onDelete={() => handleDelete(cita.$id)}
                                 />
                             ))}
                         </View>

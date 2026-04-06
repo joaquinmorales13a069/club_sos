@@ -721,6 +721,22 @@ export const crearCita = async (payload: NuevaCitaPayload): Promise<Cita> => {
 };
 
 /**
+ * Elimina una cita de Appwrite por su ID.
+ */
+export const deleteCita = async (citaId: string): Promise<void> => {
+    try {
+        await databases.deleteDocument(
+            appwriteConfig.databaseId!,
+            appwriteConfig.citasId!,
+            citaId,
+        );
+    } catch (error) {
+        if (error instanceof Error) throw new Error(error.message);
+        throw new Error("Error al eliminar la cita");
+    }
+};
+
+/**
  * Obtiene las citas de un miembro ordenadas por fecha ascendente
  * (la próxima cita aparece primera).
  */
