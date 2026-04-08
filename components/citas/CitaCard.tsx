@@ -1,73 +1,168 @@
 import React, { useMemo } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Text, View } from "react-native";
-import { THEME_COLORS } from "@/libs/themeColors";
+import { Pressable, Text, View } from "react-native";
 
-const SOS_WHITE = THEME_COLORS.sosWhite;
+import type { Cita } from "@/type";
 
-export interface Cita {
-  miembro_id: string;
-  empresa_id: string;
-  fecha_hora_cita: string;
-  motivo_cita: string | null;
-  ea_service_id: string | null;
-  ea_provider_id: string | null;
-  ea_customer_id: string | null;
-  estado_sync: string;
-  ea_appointment_id: string | null;
-}
+// ─── Estado config ────────────────────────────────────────────────────────────
+
+type EstadoConfig = {
+    bgColor: string;
+    borderColor: string;
+    label: string;
+    icon: keyof typeof MaterialIcons.glyphMap;
+};
+
+const ESTADO_CONFIG: Record<Cita["estado_sync"], EstadoConfig> = {
+    sincronizado: {
+        bgColor: "#CC3333",
+        borderColor: "#CC3333",
+        label: "Confirmada",
+        icon: "check-circle",
+    },
+    pendiente: {
+        bgColor: "#D97706",
+        borderColor: "#D97706",
+        label: "Pendiente de aprobación",
+        icon: "schedule",
+    },
+    fallido: {
+        bgColor: "#9CA3AF",
+        borderColor: "#9CA3AF",
+        label: "Rechazada",
+        icon: "cancel",
+    },
+};
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface CitaCardProps {
-  cita: Cita;
-  servicio: string;
-  doctor: string;
+    cita: Cita;
+    servicio: string;
+    doctor: string;
+    onEdit?: () => void;
+    onDelete?: () => void;
 }
 
-export default function CitaCard({ cita, servicio, doctor }: CitaCardProps) {
-  const fechaFormateada = useMemo(() => {
-    const date = new Date(cita.fecha_hora_cita);
-    return new Intl.DateTimeFormat("es-NI", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }).format(date);
-  }, [cita.fecha_hora_cita]);
+// ─── Component ───────────────────────────────────────────────────────────────
 
-  return (
-    <View className="overflow-hidden rounded-2xl border border-sos-red bg-sos-red shadow-sm">
-      <View className="p-5">
-        <View className="flex-row items-center gap-2">
-          <MaterialIcons name="event" size={18} color={SOS_WHITE} />
-          <Text className="text-sm uppercase tracking-widest text-sos-white/80 font-poppins-semibold">
-            Proxima cita
-          </Text>
+export default function CitaCard({ cita, servicio, doctor, onEdit, onDelete }: CitaCardProps) {
+    const fechaFormateada = useMemo(() => {
+        const date = new Date(cita.fecha_hora_cita);
+        const weekday = new Intl.DateTimeFormat("es-NI", {
+            weekday: "long",
+            timeZone: "UTC",
+        }).format(date);
+        const day = new Intl.DateTimeFormat("es-NI", {
+            day: "2-digit",
+            timeZone: "UTC",
+        }).format(date);
+        const month = new Intl.DateTimeFormat("es-NI", {
+            month: "long",
+            timeZone: "UTC",
+        }).format(date);
+        const time = new Intl.DateTimeFormat("es-NI", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+            timeZone: "UTC",
+        }).format(date);
+
+        const weekdayCap = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+        const monthCap = month.charAt(0).toUpperCase() + month.slice(1);
+
+        return `${weekdayCap}, ${day} de ${monthCap} a las ${time}`;
+    }, [cita.fecha_hora_cita]);
+
+    const config = ESTADO_CONFIG[cita.estado_sync] ?? ESTADO_CONFIG.pendiente;
+
+    return (
+        <View
+            style={{
+                backgroundColor: config.bgColor,
+                borderColor: config.borderColor,
+            }}
+            className="overflow-hidden rounded-2xl border shadow-sm"
+        >
+            <View className="p-5">
+                {/* Estado badge */}
+                <View className="flex-row items-center gap-2">
+                    <MaterialIcons name={config.icon} size={16} color="rgba(255,255,255,0.9)" />
+                    <Text className="text-xs uppercase tracking-widest text-sos-white/80 font-poppins-semibold">
+                        {config.label}
+                    </Text>
+                </View>
+
+                {/* Fecha */}
+                <Text className="mt-2 text-lg text-sos-white font-poppins-bold">
+                    {fechaFormateada}
+                </Text>
+
+                {/* Detalle */}
+                <View className="mt-4 rounded-xl bg-sos-white/15 p-4 gap-2">
+                    <View className="flex-row items-center gap-2">
+                        <MaterialIcons name="medical-services" size={16} color="rgba(255,255,255,0.85)" />
+                        <Text className="flex-1 text-sm text-sos-white/90">
+                            Servicio:{" "}
+                            <Text className="text-sos-white font-poppins-medium">
+                                {servicio}
+                            </Text>
+                        </Text>
+                    </View>
+
+                    <View className="flex-row items-center gap-2">
+                        <MaterialIcons name="person-outline" size={16} color="rgba(255,255,255,0.85)" />
+                        <Text className="flex-1 text-sm text-sos-white/90">
+                            Doctor:{" "}
+                            <Text className="text-sos-white font-poppins-medium">
+                                {doctor}
+                            </Text>
+                        </Text>
+                    </View>
+
+                    <View className="flex-row items-center gap-2">
+                        <MaterialIcons name="person-pin" size={16} color="rgba(255,255,255,0.85)" />
+                        <Text className="flex-1 text-sm text-sos-white/90">
+                            Paciente:{" "}
+                            <Text className="text-sos-white font-poppins-medium">
+                                {cita.paciente_nombre}
+                            </Text>
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Acciones */}
+                {(onDelete || (onEdit && cita.estado_sync === "pendiente")) && (
+                    <View className="flex-row gap-2 mt-4">
+                        {onEdit && cita.estado_sync === "pendiente" && (
+                            <Pressable
+                                onPress={onEdit}
+                                accessibilityRole="button"
+                                accessibilityLabel="Editar cita"
+                                className="flex-1 flex-row items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sos-white/20 active:opacity-70"
+                            >
+                                <MaterialIcons name="edit" size={16} color="rgba(255,255,255,0.9)" />
+                                <Text className="text-sm text-sos-white font-poppins-semibold">
+                                    Editar
+                                </Text>
+                            </Pressable>
+                        )}
+                        {onDelete && (
+                            <Pressable
+                                onPress={onDelete}
+                                accessibilityRole="button"
+                                accessibilityLabel="Eliminar cita"
+                                className="flex-1 flex-row items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sos-white/20 active:opacity-70"
+                            >
+                                <MaterialIcons name="delete-outline" size={16} color="rgba(255,255,255,0.9)" />
+                                <Text className="text-sm text-sos-white font-poppins-semibold">
+                                    Eliminar
+                                </Text>
+                            </Pressable>
+                        )}
+                    </View>
+                )}
+            </View>
         </View>
-
-        <Text className="mt-2 text-lg text-sos-white font-poppins-bold">
-          {fechaFormateada}
-        </Text>
-
-        <View className="mt-4 rounded-xl bg-sos-white/15 p-4">
-          <View className="flex-row items-center gap-2">
-            <MaterialIcons name="medical-services" size={18} color={SOS_WHITE} />
-            <Text className="text-sm text-sos-white/90">
-              Servicio:{" "}
-              <Text className="text-sos-white font-poppins-medium">{servicio}</Text>
-            </Text>
-          </View>
-
-          <View className="mt-2 flex-row items-center gap-2">
-            <MaterialIcons name="person-outline" size={18} color={SOS_WHITE} />
-            <Text className="text-sm text-sos-white/90">
-              Doctor:{" "}
-              <Text className="text-sos-white font-poppins-medium">{doctor}</Text>
-            </Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
+    );
 }

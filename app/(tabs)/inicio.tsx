@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
     Alert,
     Image,
     Text,
     View,
     ActivityIndicator,
-    useColorScheme,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
 
@@ -13,7 +12,7 @@ import TabScreenView from "@/components/shared/TabScreenView";
 import TabScrollView from "@/components/shared/TabScrollView";
 
 import BeneficioCard from "@/components/beneficios/BeneficioCard";
-import CitaCard, { type Cita } from "@/components/citas/CitaCard";
+import CitaCard from "@/components/citas/CitaCard";
 import MembresiaCard from "@/components/inicio/MembresiaCard";
 import SupportButton from "@/components/inicio/SupportButton";
 
@@ -22,30 +21,24 @@ import {
     findMiembroByAuthUserId,
     getBeneficiosByEmpresa,
     getEmpresaById,
+    getCitasByMiembro,
+    getServiciosByEaIds,
+    getDoctoresByEaIds,
 } from "@/libs/appwrite";
 import { THEME_COLORS } from "@/libs/themeColors";
-
-const citaMock: Cita = {
-    miembro_id: "miembro-001",
-    empresa_id: "empresa-001",
-    fecha_hora_cita: new Date().toISOString(),
-    motivo_cita: "Control general",
-    ea_service_id: null,
-    ea_provider_id: null,
-    ea_customer_id: null,
-    estado_sync: "pendiente",
-    ea_appointment_id: null,
-};
+import type { Cita, Servicio, Doctor } from "@/type";
 
 export default function HomeTabScreen() {
     const [miembro, setMiembro] = useState<any>(null);
     const [empresa, setEmpresa] = useState<any>(null);
     const [beneficios, setBeneficios] = useState<any[]>([]);
+    const [citas, setCitas] = useState<Cita[]>([]);
+    const [serviciosMap, setServiciosMap] = useState<Record<string, string>>({});
+    const [doctoresMap, setDoctoresMap] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-    const scheme = useColorScheme();
-    const isDark = scheme === "dark";
+
 
     const loadUserData = useCallback(async (showLoader = true) => {
         try {
@@ -77,6 +70,57 @@ export default function HomeTabScreen() {
                     miembroDoc.empresa_id,
                 );
                 setBeneficios(beneficiosData);
+            }
+
+            // Get citas for this miembro (pendiente or sincronizado), last 3
+            const todasCitas = await getCitasByMiembro(miembroDoc.$id);
+            const citasActivas = todasCitas
+                .filter(
+                    (c) =>
+                        c.estado_sync === "pendiente" ||
+                        c.estado_sync === "sincronizado",
+                )
+                .slice(-3);
+            setCitas(citasActivas);
+
+            // Resolve service and doctor names
+            if (citasActivas.length > 0) {
+                const serviceEaIds = [
+                    ...new Set(
+                        citasActivas
+                            .map((c) => Number(c.ea_service_id))
+                            .filter(Boolean),
+                    ),
+                ];
+                const doctorEaIds = [
+                    ...new Set(
+                        citasActivas
+                            .map((c) => Number(c.ea_provider_id))
+                            .filter(Boolean),
+                    ),
+                ];
+
+                const [servicios, doctores] = await Promise.all([
+                    serviceEaIds.length > 0
+                        ? getServiciosByEaIds(serviceEaIds)
+                        : Promise.resolve([] as Servicio[]),
+                    doctorEaIds.length > 0
+                        ? getDoctoresByEaIds(doctorEaIds)
+                        : Promise.resolve([] as Doctor[]),
+                ]);
+
+                const sMap: Record<string, string> = {};
+                for (const s of servicios) {
+                    sMap[String(s.ea_id)] = s.nombre;
+                }
+
+                const dMap: Record<string, string> = {};
+                for (const d of doctores) {
+                    dMap[String(d.ea_id)] = `${d.nombres} ${d.apellidos}`;
+                }
+
+                setServiciosMap(sMap);
+                setDoctoresMap(dMap);
             }
         } catch (err) {
             console.error("Error loading user data:", err);
@@ -178,17 +222,17 @@ export default function HomeTabScreen() {
 
                 <View className="mt-7">
                     <View className="flex-row items-center justify-between mb-3">
-                        <Text className="text-xl text-gray-900 dark:text-sos-white font-poppins-bold">
+                        <Text className="text-2xl text-sos-bluegreen dark:text-sos-white font-poppins-bold">
                             Beneficios
                         </Text>
-                        <Text className="text-sm text-sos-bluegreen dark:text-sos-bluegreen font-poppins-medium">
+                        <Text className="text-sm text-sos-gray dark:text-sos-bluegreen font-poppins-bold">
                             Ver todos
                         </Text>
                     </View>
 
                     {beneficios.length === 0 ? (
                         <View className="px-4 py-8 rounded-2xl bg-gray-50 dark:bg-[#151f2b]">
-                            <Text className="text-sm text-center text-sos-gray dark:text-gray-400 font-poppins-medium">
+                            <Text className="text-sm text-center text-sos-gray dark:text-gray-400 font-poppins-bold">
                                 No hay beneficios disponibles en este momento
                             </Text>
                         </View>
@@ -206,19 +250,38 @@ export default function HomeTabScreen() {
 
                 <View className="mt-7">
                     <View className="flex-row items-center justify-between mb-3">
-                        <Text className="text-xl text-gray-900 dark:text-sos-white font-poppins-bold">
+                        <Text className="text-2xl text-sos-bluegreen dark:text-sos-white font-poppins-bold">
                             Mis citas
                         </Text>
-                        <Text className="text-sm text-sos-bluegreen dark:text-sos-bluegreen font-poppins-medium">
+                        <Text className="text-sm text-sos-gray dark:text-sos-bluegreen font-poppins-bold">
                             Ver todas
                         </Text>
                     </View>
 
-                    <CitaCard
-                        cita={citaMock}
-                        servicio="Consulta General"
-                        doctor="Dr. Maria Gonzalez"
-                    />
+                    {citas.length === 0 ? (
+                        <View className="px-4 py-8 rounded-2xl bg-gray-50 dark:bg-[#151f2b]">
+                            <Text className="text-sm text-center text-sos-gray dark:text-gray-400 font-poppins-medium">
+                                No tienes citas programadas
+                            </Text>
+                        </View>
+                    ) : (
+                        <View className="gap-3">
+                            {citas.map((cita) => (
+                                <CitaCard
+                                    key={cita.$id}
+                                    cita={cita}
+                                    servicio={
+                                        serviciosMap[cita.ea_service_id] ??
+                                        "Servicio"
+                                    }
+                                    doctor={
+                                        doctoresMap[cita.ea_provider_id] ??
+                                        "Doctor"
+                                    }
+                                />
+                            ))}
+                        </View>
+                    )}
                 </View>
 
                 <View className="mt-6">
